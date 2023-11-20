@@ -1,0 +1,8 @@
+{
+  "Discord": {
+    "Token": "<token>"
+  },
+  "IsThereAnyDeal": {
+    "ApiKey": "<api key>"
+  }
+}
