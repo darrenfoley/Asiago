@@ -23,8 +23,8 @@ namespace Asiago.SlashCommands
         [SlashCommand("gamedeals", "Get game deals")]
         public async Task GetDeals(
             InteractionContext ctx,
-            [Option("Title", "The title of the game")] string title,
-            [Option("Country", "The country for which you want deals")] Country country
+            [Option("title", "The title of the game")] string title,
+            [Option("country", "The country for which you want deals")] Country country
             )
         {
             await ctx.DeferAsync();
@@ -61,7 +61,7 @@ namespace Asiago.SlashCommands
                 return;
             }
 
-            var embedBuilder = new DiscordEmbedBuilder()
+            DiscordEmbedBuilder embedBuilder = new()
             {
                 Color = Colours.EmbedColour,
                 Title = gameInfo.Title,
