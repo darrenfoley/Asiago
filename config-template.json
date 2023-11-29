@@ -1,9 +1,0 @@
-{
-  "Discord": {
-    "Token": "<token>",
-    "CommandPrefix": "!"
-  },
-  "IsThereAnyDeal": {
-    "ApiKey": "<api key>"
-  }
-}

@@ -9,18 +9,21 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 var builder = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("config.json", false);
+    .AddEnvironmentVariables();
 
 var config = builder.Build();
 
-if (config.GetRequiredSection("Discord").GetValue<string>("Token") is not string token)
+if (config.GetValue<string>("DISCORD_TOKEN") is not string token)
 {
-    throw new ConfigurationException("Discord.Token must be set to a string in config.json");
+    throw new ConfigurationException("The environment variable DISCORD_TOKEN must be set");
 }
-if (config.GetRequiredSection("Discord").GetValue<string>("CommandPrefix") is not string commandPrefix)
+if (config.GetValue<string>("DISCORD_COMMANDPREFIX") is not string commandPrefix)
 {
-    throw new ConfigurationException("Discord.CommandPrefix must be set to a string in config.json");
+    throw new ConfigurationException("The environment variable DISCORD_COMMANDPREFIX must be set");
+}
+if (config.GetValue<string>("ISTHEREANYDEAL_APIKEY") is not string isThereAnyDealApiKey)
+{
+    throw new ConfigurationException("The environment variable ISTHEREANYDEAL_APIKEY must be set");
 }
 
 DiscordConfiguration discordConfig = new()
@@ -34,7 +37,7 @@ DiscordClient discord = new(discordConfig);
 
 var serviceCollection = new ServiceCollection();
 
-serviceCollection.AddOptions<IsThereAnyDealOptions>().Bind(config.GetRequiredSection("IsThereAnyDeal")).ValidateDataAnnotations();
+serviceCollection.AddOptions<IsThereAnyDealOptions>().Configure(options => options.ApiKey = isThereAnyDealApiKey);
 serviceCollection.AddSingleton<HttpClient>()
     .AddSingleton(discord);
 
@@ -45,8 +48,7 @@ var slashCommands = discord.UseSlashCommands(new SlashCommandsConfiguration
     Services = serviceProvider,
 });
 
-// TODO: conditionally register commands for guild/globally based on config.json
-slashCommands.RegisterCommands<IsThereAnyDealModule>();
+slashCommands.RegisterCommands<IsThereAnyDealModule>(config.GetValue<ulong?>("DISCORD_GUILDID"));
 
 // Remember: need to add DiscordIntents.MessageContents privileged intent if prefix commands need to work outside of DMs with the bot
 var commands = discord.UseCommandsNext(new CommandsNextConfiguration
