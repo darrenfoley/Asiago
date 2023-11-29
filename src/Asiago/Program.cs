@@ -1,6 +1,6 @@
 ﻿using Asiago;
 using Asiago.Commands;
-using Asiago.Exceptions;
+using Asiago.Extensions;
 using Asiago.SlashCommands;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -13,18 +13,9 @@ var builder = new ConfigurationBuilder()
 
 var config = builder.Build();
 
-if (config.GetValue<string>("DISCORD_TOKEN") is not string token)
-{
-    throw new ConfigurationException("The environment variable DISCORD_TOKEN must be set");
-}
-if (config.GetValue<string>("DISCORD_COMMANDPREFIX") is not string commandPrefix)
-{
-    throw new ConfigurationException("The environment variable DISCORD_COMMANDPREFIX must be set");
-}
-if (config.GetValue<string>("ISTHEREANYDEAL_APIKEY") is not string isThereAnyDealApiKey)
-{
-    throw new ConfigurationException("The environment variable ISTHEREANYDEAL_APIKEY must be set");
-}
+string token = config.GetRequiredValue<string>("DISCORD_TOKEN");
+string commandPrefix = config.GetRequiredValue<string>("DISCORD_COMMANDPREFIX");
+string isThereAnyDealApiKey = config.GetRequiredValue<string>("ISTHEREANYDEAL_APIKEY");
 
 DiscordConfiguration discordConfig = new()
 {
