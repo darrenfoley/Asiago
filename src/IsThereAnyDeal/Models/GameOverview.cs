@@ -1,4 +1,4 @@
-﻿namespace Asiago.Models
+﻿namespace IsThereAnyDeal.Models
 {
     public class GameOverview
     {
