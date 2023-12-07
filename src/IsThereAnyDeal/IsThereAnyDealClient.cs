@@ -76,6 +76,20 @@ namespace IsThereAnyDeal
             return infoResponse?.Extract(id);
         }
 
+        public async Task<List<SearchResult>?> GetSearch(string query, int limit, bool fuzzy = true)
+        {
+            Dictionary<string, string> queryParameters = new()
+            {
+                { "key", _apiKey },
+                { "q", query },
+                { "limit", limit.ToString() },
+                { "strict", fuzzy ? "0" : "1" }
+            };
+
+            var searchResponse = await GetAsync<ResponseModels.Search>("/v02/search/search/", queryParameters);
+            return searchResponse?.Extract();
+        }
+
         private async Task<T?> GetAsync<T>(string path, Dictionary<string, string> queryParameters) where T : class
         {
             UriBuilder uriBuilder = new($"{BaseUrl}{path}")
