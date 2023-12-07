@@ -29,8 +29,7 @@ DiscordClient discord = new(discordConfig);
 var serviceCollection = new ServiceCollection();
 
 serviceCollection.AddOptions<IsThereAnyDealOptions>().Configure(options => options.ApiKey = isThereAnyDealApiKey);
-serviceCollection.AddSingleton<HttpClient>()
-    .AddSingleton(discord);
+serviceCollection.AddSingleton<HttpClient>();
 
 var serviceProvider = serviceCollection.BuildServiceProvider();
 

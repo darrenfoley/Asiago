@@ -9,9 +9,14 @@ namespace Asiago.SlashCommands
 {
     internal class IsThereAnyDealModule : ApplicationCommandModule
     {
-        // Dependency-injected members
-        public IOptions<IsThereAnyDealOptions> ItadOptions { private get; set; } = null!;
-        public HttpClient HttpClient { private get; set; } = null!;
+        private readonly IsThereAnyDealOptions _itadOptions;
+        private readonly HttpClient _httpClient;
+
+        public IsThereAnyDealModule(IOptions<IsThereAnyDealOptions> itadOptions, HttpClient httpClient)
+        {
+            _itadOptions = itadOptions.Value;
+            _httpClient = httpClient;
+        }
 
         [SlashCommand("gamedeals", "Get game deals")]
         public async Task GetDeals(
@@ -22,7 +27,7 @@ namespace Asiago.SlashCommands
         {
             await ctx.DeferAsync();
 
-            IsThereAnyDealClient itadClient = new(ItadOptions.Value.ApiKey, HttpClient);
+            IsThereAnyDealClient itadClient = new(_itadOptions.ApiKey, _httpClient);
             string? gameId = await itadClient.GetGameId(title);
             if (gameId is null)
             {
@@ -135,8 +140,8 @@ namespace Asiago.SlashCommands
 
     internal class GameTitleAutocompleteProvider : IAutocompleteProvider
     {
-        private IsThereAnyDealOptions _itadOptions { get; set; } = null!;
-        private HttpClient _httpClient { get; set; } = null!;
+        private readonly IsThereAnyDealOptions _itadOptions;
+        private readonly HttpClient _httpClient;
 
         public GameTitleAutocompleteProvider(IOptions<IsThereAnyDealOptions> itadOptions, HttpClient httpClient)
         {
