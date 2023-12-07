@@ -7,6 +7,7 @@
         public int PriceCutPercent { get; }
         public string Store { get; }
         public string Url { get; }
+
         public GamePrice(decimal currentPrice, decimal regularPrice, int priceCutPercent, string store, string url)
         {
             CurrentPrice = currentPrice;

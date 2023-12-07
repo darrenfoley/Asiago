@@ -13,18 +13,10 @@ namespace Asiago.SlashCommands
         public IOptions<IsThereAnyDealOptions> ItadOptions { private get; set; } = null!;
         public HttpClient HttpClient { private get; set; } = null!;
 
-        public enum Country
-        {
-            [ChoiceName("Canada")]
-            CA,
-            [ChoiceName("USA")]
-            US,
-        }
-
         [SlashCommand("gamedeals", "Get game deals")]
         public async Task GetDeals(
             InteractionContext ctx,
-            [Option("title", "The title of the game")] string title,
+            [Option("title", "The title of the game"), Autocomplete(typeof(GameTitleAutocompleteProvider))] string title,
             [Option("country", "The country for which you want deals")] Country country
             )
         {
@@ -130,6 +122,41 @@ namespace Asiago.SlashCommands
             }
 
             return bestPriceString;
+        }
+    }
+
+    internal enum Country
+    {
+        [ChoiceName("Canada")]
+        CA,
+        [ChoiceName("USA")]
+        US,
+    }
+
+    internal class GameTitleAutocompleteProvider : IAutocompleteProvider
+    {
+        private IsThereAnyDealOptions _itadOptions { get; set; } = null!;
+        private HttpClient _httpClient { get; set; } = null!;
+
+        public GameTitleAutocompleteProvider(IOptions<IsThereAnyDealOptions> itadOptions, HttpClient httpClient)
+        {
+            _itadOptions = itadOptions.Value;
+            _httpClient = httpClient;
+        }
+
+        public async Task<IEnumerable<DiscordAutoCompleteChoice>> Provider(AutocompleteContext ctx)
+        {
+            var value = ctx.FocusedOption.Value.ToString();
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                IsThereAnyDealClient itadClient = new(_itadOptions.ApiKey, _httpClient);
+                var searchResults = await itadClient.GetSearch(value, 25);
+                if (searchResults is not null)
+                {
+                    return searchResults.ConvertAll(result => new DiscordAutoCompleteChoice(result.Title, result.Title));
+                }
+            }
+            return Enumerable.Empty<DiscordAutoCompleteChoice>();
         }
     }
 }
