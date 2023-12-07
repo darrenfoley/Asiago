@@ -1,7 +1,8 @@
 ﻿using Asiago.Extensions;
-using Asiago.Models;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using IsThereAnyDeal;
+using IsThereAnyDeal.Models;
 using Microsoft.Extensions.Options;
 
 namespace Asiago.SlashCommands

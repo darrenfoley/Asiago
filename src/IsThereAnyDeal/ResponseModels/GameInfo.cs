@@ -1,13 +1,13 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace Asiago.ResponseModels
+namespace IsThereAnyDeal.ResponseModels
 {
     internal class GameInfo
     {
         public Dictionary<string, GameInfoData> Data { get; set; } = null!;
 
-        internal Models.GameInfo? Extract(string plain)
+        public Models.GameInfo? Extract(string plain)
         {
             if (!Data.TryGetValue(plain, out GameInfoData? gameInfoData) || gameInfoData.Title is null)
             {

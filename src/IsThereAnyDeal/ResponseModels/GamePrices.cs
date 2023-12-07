@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Asiago.ResponseModels
+namespace IsThereAnyDeal.ResponseModels
 {
     internal class GamePrices
     {

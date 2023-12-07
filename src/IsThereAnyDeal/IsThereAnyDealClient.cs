@@ -1,8 +1,8 @@
-﻿using Asiago.Extensions;
-using Asiago.Models;
+﻿using IsThereAnyDeal.Extensions;
+using IsThereAnyDeal.Models;
 using Newtonsoft.Json;
 
-namespace Asiago
+namespace IsThereAnyDeal
 {
     public class IsThereAnyDealClient
     {

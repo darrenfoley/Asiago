@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace Asiago.ResponseModels
+namespace IsThereAnyDeal.ResponseModels
 {
     internal class GameOverview
     {
@@ -9,7 +9,7 @@ namespace Asiago.ResponseModels
         public GameOverviewMeta Meta { get; set; } = null!;
         public Dictionary<string, GameOverviewData> Data { get; set; } = null!;
 
-        internal Models.GameOverview? Extract(string plain)
+        public Models.GameOverview? Extract(string plain)
         {
             if (!Data.TryGetValue(plain, out GameOverviewData? gameOverviewData) || gameOverviewData.Price is null)
             {
