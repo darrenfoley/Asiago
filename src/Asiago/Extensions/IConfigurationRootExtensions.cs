@@ -1,4 +1,4 @@
-﻿using Asiago.Exceptions;
+﻿using Asiago.Common.Exceptions;
 using Microsoft.Extensions.Configuration;
 
 namespace Asiago.Extensions
