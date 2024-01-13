@@ -34,7 +34,7 @@ namespace Asiago.SlashCommands
                 await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder().AddEmbed(
                     new DiscordEmbedBuilder()
                     {
-                        Color = Colours.EmbedColour,
+                        Color = Colours.EmbedColourError,
                         Description = $"I can't find a game with the title \"{title}\""
                     }));
                 return;
@@ -53,7 +53,7 @@ namespace Asiago.SlashCommands
                 await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder().AddEmbed(
                     new DiscordEmbedBuilder()
                     {
-                        Color = Colours.EmbedColour,
+                        Color = Colours.EmbedColourError,
                         Description = $"I don't have deal info for \"{title}\""
                     }));
                 return;
@@ -61,7 +61,7 @@ namespace Asiago.SlashCommands
 
             DiscordEmbedBuilder embedBuilder = new()
             {
-                Color = Colours.EmbedColour,
+                Color = Colours.EmbedColourDefault,
                 Title = gameInfo.Title,
                 Url = gameInfo.IsThereAnyDealGameUrl,
             };
