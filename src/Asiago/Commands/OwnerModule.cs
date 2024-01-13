@@ -14,7 +14,7 @@ namespace Asiago.Commands
 
             DiscordEmbedBuilder embedBuilder = new()
             {
-                Color = Colours.EmbedColour,
+                Color = Colours.EmbedColourDefault,
                 Description = message,
             };
 

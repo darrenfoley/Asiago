@@ -26,7 +26,7 @@ DiscordConfiguration discordConfig = new()
     Token = token,
     TokenType = TokenType.Bot,
     // TODO: narrow down needed intents
-    Intents = DiscordIntents.AllUnprivileged
+    Intents = DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents
 };
 DiscordClient discord = new(discordConfig);
 
@@ -53,6 +53,7 @@ var commands = discord.UseCommandsNext(new CommandsNextConfiguration
 });
 
 commands.RegisterCommands<OwnerModule>();
+commands.RegisterCommands<GuildConfigurationModule>();
 
 await discord.ConnectAsync();
 await Task.Delay(-1);
