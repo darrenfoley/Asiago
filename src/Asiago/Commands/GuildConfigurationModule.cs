@@ -10,29 +10,33 @@ namespace Asiago.Commands
 {
     internal class GuildConfigurationModule : BaseCommandModule
     {
-        private readonly ApplicationDbContext _dbContext;
+        private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
 
-        public GuildConfigurationModule(ApplicationDbContext dbContext)
+        public GuildConfigurationModule(IDbContextFactory<ApplicationDbContext> dbContextFactory)
         {
-            _dbContext = dbContext;
+            _dbContextFactory = dbContextFactory;
         }
 
         [Command]
         [RequireOwner]
         public async Task SetAdminRole(CommandContext ctx, DiscordRole role)
         {
-            // returns the total number of rows affected
-            int result = await _dbContext.GuildConfigurations.Upsert(new GuildConfiguration
+            int rowsAffected;
+
+            using (var dbContext = _dbContextFactory.CreateDbContext())
             {
-                GuildId = ctx.Guild.Id,
-                AdminRoleId = role.Id
-            }).WhenMatched(gc => new GuildConfiguration
-            {
-                AdminRoleId = role.Id
-            }).RunAsync();
+                rowsAffected = await dbContext.GuildConfigurations.Upsert(new GuildConfiguration
+                {
+                    GuildId = ctx.Guild.Id,
+                    AdminRoleId = role.Id
+                }).WhenMatched(gc => new GuildConfiguration
+                {
+                    AdminRoleId = role.Id
+                }).RunAsync();
+            }
 
             DiscordEmbedBuilder embedBuilder = new();
-            if (result == 1)
+            if (rowsAffected == 1)
             {
                 embedBuilder.Color = Colours.EmbedColourDefault;
                 embedBuilder.Description = $"Admin role has been set to {role.Mention}";
@@ -50,18 +54,22 @@ namespace Asiago.Commands
         [RequireAdmin]
         public async Task SetModRole(CommandContext ctx, DiscordRole role)
         {
-            // returns the total number of rows affected
-            int result = await _dbContext.GuildConfigurations.Upsert(new GuildConfiguration
+            int rowsAffected;
+
+            using (var dbContext = _dbContextFactory.CreateDbContext())
             {
-                GuildId = ctx.Guild.Id,
-                ModRoleId = role.Id
-            }).WhenMatched(gc => new GuildConfiguration
-            {
-                ModRoleId = role.Id
-            }).RunAsync();
+                rowsAffected = await dbContext.GuildConfigurations.Upsert(new GuildConfiguration
+                {
+                    GuildId = ctx.Guild.Id,
+                    ModRoleId = role.Id
+                }).WhenMatched(gc => new GuildConfiguration
+                {
+                    ModRoleId = role.Id
+                }).RunAsync();
+            }
 
             DiscordEmbedBuilder embedBuilder = new();
-            if (result == 1)
+            if (rowsAffected == 1)
             {
                 embedBuilder.Color = Colours.EmbedColourDefault;
                 embedBuilder.Description = $"Mod role has been set to {role.Mention}";
@@ -89,17 +97,21 @@ namespace Asiago.Commands
                 return;
             }
 
-            // returns the total number of rows affected
-            int result = await _dbContext.GuildConfigurations.Upsert(new GuildConfiguration
-            {
-                GuildId = ctx.Guild.Id,
-                TwitchUpdateChannelId = channel.Id
-            }).WhenMatched(gc => new GuildConfiguration
-            {
-                TwitchUpdateChannelId = channel.Id
-            }).RunAsync();
+            int rowsAffected;
 
-            if (result == 1)
+            using (var dbContext = _dbContextFactory.CreateDbContext())
+            {
+                rowsAffected = await dbContext.GuildConfigurations.Upsert(new GuildConfiguration
+                {
+                    GuildId = ctx.Guild.Id,
+                    TwitchUpdateChannelId = channel.Id
+                }).WhenMatched(gc => new GuildConfiguration
+                {
+                    TwitchUpdateChannelId = channel.Id
+                }).RunAsync();
+            }
+
+            if (rowsAffected == 1)
             {
                 embedBuilder.Color = Colours.EmbedColourDefault;
                 embedBuilder.Description = $"Twitch update channel has been set to {channel.Mention}";
