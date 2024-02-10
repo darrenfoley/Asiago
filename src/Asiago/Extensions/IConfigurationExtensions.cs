@@ -3,9 +3,9 @@ using Microsoft.Extensions.Configuration;
 
 namespace Asiago.Extensions
 {
-    internal static class IConfigurationRootExtensions
+    internal static class IConfigurationExtensions
     {
-        public static T GetRequiredValue<T>(this IConfigurationRoot config, string key)
+        public static T GetRequiredValue<T>(this IConfiguration config, string key)
         {
             if (config.GetValue<T>(key) is T value)
             {
