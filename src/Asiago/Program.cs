@@ -24,7 +24,7 @@ string postgresConnectionString = builder.Configuration.GetRequiredPostgresConne
 
 builder.Services.AddOptions<IsThereAnyDealOptions>().Configure(options => options.ApiKey = isThereAnyDealApiKey);
 builder.Services.AddSingleton<HttpClient>();
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(postgresConnectionString));
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseNpgsql(postgresConnectionString));
 
 var host = builder.Build();
 
