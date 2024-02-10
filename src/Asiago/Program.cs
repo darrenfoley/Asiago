@@ -10,16 +10,23 @@ using DSharpPlus.SlashCommands;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-var builder = new ConfigurationBuilder()
-    .AddEnvironmentVariables();
+var builder = Host.CreateApplicationBuilder();
 
-var config = builder.Build();
+builder.Logging.AddConsole();
 
-string token = config.GetRequiredValue<string>("DISCORD_TOKEN");
-string commandPrefix = config.GetRequiredValue<string>("DISCORD_COMMANDPREFIX");
-string isThereAnyDealApiKey = config.GetRequiredValue<string>("ISTHEREANYDEAL_APIKEY");
-string postgresConnectionString = config.GetRequiredPostgresConnectionString();
+string token = builder.Configuration.GetRequiredValue<string>("DISCORD_TOKEN");
+string commandPrefix = builder.Configuration.GetRequiredValue<string>("DISCORD_COMMANDPREFIX");
+string isThereAnyDealApiKey = builder.Configuration.GetRequiredValue<string>("ISTHEREANYDEAL_APIKEY");
+string postgresConnectionString = builder.Configuration.GetRequiredPostgresConnectionString();
+
+builder.Services.AddOptions<IsThereAnyDealOptions>().Configure(options => options.ApiKey = isThereAnyDealApiKey);
+builder.Services.AddSingleton<HttpClient>();
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(postgresConnectionString));
+
+var host = builder.Build();
 
 DiscordConfiguration discordConfig = new()
 {
@@ -30,25 +37,17 @@ DiscordConfiguration discordConfig = new()
 };
 DiscordClient discord = new(discordConfig);
 
-var serviceCollection = new ServiceCollection();
-
-serviceCollection.AddOptions<IsThereAnyDealOptions>().Configure(options => options.ApiKey = isThereAnyDealApiKey);
-serviceCollection.AddSingleton<HttpClient>()
-    .AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(postgresConnectionString));
-
-var serviceProvider = serviceCollection.BuildServiceProvider();
-
 var slashCommands = discord.UseSlashCommands(new SlashCommandsConfiguration
 {
-    Services = serviceProvider,
+    Services = host.Services,
 });
 
-slashCommands.RegisterCommands<IsThereAnyDealModule>(config.GetValue<ulong?>("DISCORD_GUILDID"));
+slashCommands.RegisterCommands<IsThereAnyDealModule>(builder.Configuration.GetValue<ulong?>("DISCORD_GUILDID"));
 
 // Remember: need to add DiscordIntents.MessageContents privileged intent if prefix commands need to work outside of DMs with the bot
 var commands = discord.UseCommandsNext(new CommandsNextConfiguration
 {
-    Services = serviceProvider,
+    Services = host.Services,
     StringPrefixes = new[] { commandPrefix },
 });
 
@@ -56,4 +55,5 @@ commands.RegisterCommands<OwnerModule>();
 commands.RegisterCommands<GuildConfigurationModule>();
 
 await discord.ConnectAsync();
-await Task.Delay(-1);
+
+await host.RunAsync();

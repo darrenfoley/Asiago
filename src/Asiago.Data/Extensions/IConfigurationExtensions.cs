@@ -4,9 +4,9 @@ using Npgsql;
 
 namespace Asiago.Data.Extensions
 {
-    public static class IConfigurationRootExtensions
+    public static class IConfigurationExtensions
     {
-        public static string? GetPostgresConnectionString(this IConfigurationRoot config)
+        public static string? GetPostgresConnectionString(this IConfiguration config)
         {
             string? connectionString = null;
 
@@ -39,7 +39,7 @@ namespace Asiago.Data.Extensions
             return connectionString;
         }
 
-        public static string GetRequiredPostgresConnectionString(this IConfigurationRoot config)
+        public static string GetRequiredPostgresConnectionString(this IConfiguration config)
         {
             string? connectionString = config.GetPostgresConnectionString();
             if (string.IsNullOrWhiteSpace(connectionString))
