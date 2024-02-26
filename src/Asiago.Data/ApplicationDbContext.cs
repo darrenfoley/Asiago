@@ -6,6 +6,7 @@ namespace Asiago.Data
     public class ApplicationDbContext : DbContext
     {
         public DbSet<GuildConfiguration> GuildConfigurations { get; set; }
+        public DbSet<TwitchChannel> TwitchChannels { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

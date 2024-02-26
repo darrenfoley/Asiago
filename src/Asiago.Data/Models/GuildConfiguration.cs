@@ -6,5 +6,6 @@
         public ulong? AdminRoleId { get; set; }
         public ulong? ModRoleId { get; set; }
         public ulong? TwitchUpdateChannelId { get; set; }
+        public List<TwitchChannel> TwitchChannels { get; set; } = [];
     }
 }
