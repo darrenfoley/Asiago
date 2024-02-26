@@ -19,6 +19,7 @@ namespace Asiago.Commands
 
         [Command]
         [RequireOwner]
+        [RequireGuild]
         public async Task SetAdminRole(CommandContext ctx, DiscordRole role)
         {
             int rowsAffected;
