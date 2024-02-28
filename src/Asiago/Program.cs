@@ -12,6 +12,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using TwitchLib.Api;
+using TwitchLib.Api.Core;
 
 var builder = Host.CreateApplicationBuilder();
 
@@ -21,10 +23,16 @@ string token = builder.Configuration.GetRequiredValue<string>("DISCORD_TOKEN");
 string commandPrefix = builder.Configuration.GetRequiredValue<string>("DISCORD_COMMANDPREFIX");
 string isThereAnyDealApiKey = builder.Configuration.GetRequiredValue<string>("ISTHEREANYDEAL_APIKEY");
 string postgresConnectionString = builder.Configuration.GetRequiredPostgresConnectionString();
+ApiSettings twitchApiSettings = new()
+{
+    ClientId = builder.Configuration.GetRequiredValue<string>("TWITCH_CLIENTID"),
+    Secret = builder.Configuration.GetRequiredValue<string>("TWITCH_CLIENTSECRET")
+};
 
 builder.Services.AddOptions<IsThereAnyDealOptions>().Configure(options => options.ApiKey = isThereAnyDealApiKey);
 builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseNpgsql(postgresConnectionString));
+builder.Services.AddSingleton(_ => new TwitchAPI(settings: twitchApiSettings));
 
 var host = builder.Build();
 
@@ -53,6 +61,7 @@ var commands = discord.UseCommandsNext(new CommandsNextConfiguration
 
 commands.RegisterCommands<OwnerModule>();
 commands.RegisterCommands<GuildConfigurationModule>();
+commands.RegisterCommands<TwitchModule>();
 
 await discord.ConnectAsync();
 
