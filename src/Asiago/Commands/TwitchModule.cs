@@ -17,7 +17,11 @@ namespace Asiago.Commands
         private readonly TwitchAPI _twitchApi;
         private readonly ILogger<TwitchModule> _logger;
 
-        public TwitchModule(IDbContextFactory<ApplicationDbContext> dbContextFactory, TwitchAPI twitchApi, ILoggerFactory loggerFactory)
+        public TwitchModule(
+            IDbContextFactory<ApplicationDbContext> dbContextFactory,
+            TwitchAPI twitchApi,
+            ILoggerFactory loggerFactory
+            )
         {
             _dbContextFactory = dbContextFactory;
             _twitchApi = twitchApi;
@@ -40,7 +44,9 @@ namespace Asiago.Commands
 
             using (var dbContext = _dbContextFactory.CreateDbContext())
             {
-                var guildConfig = await dbContext.GuildConfigurations.Include(gc => gc.TwitchChannels).SingleOrDefaultAsync(gc => gc.GuildId == ctx.Guild.Id);
+                var guildConfig = await dbContext.GuildConfigurations
+                    .Include(gc => gc.TwitchChannels)
+                    .SingleOrDefaultAsync(gc => gc.GuildId == ctx.Guild.Id);
                 if (guildConfig == null)
                 {
                     guildConfig = new GuildConfiguration { GuildId = ctx.Guild.Id };
@@ -117,7 +123,8 @@ namespace Asiago.Commands
                     var guild = twitchChannel.SubscribedGuilds.FirstOrDefault(g => g.GuildId == ctx.Guild.Id);
                     if (guild != null)
                     {
-                        // If only the current guild subscribes to this twitch channel, then just delete the twitch channel and let things cascade
+                        // If only the current guild subscribes to this twitch channel, then just delete the twitch channel
+                        // and let things cascade
                         if (twitchChannel.SubscribedGuilds.Count == 1)
                         {
                             dbContext.Remove(twitchChannel);
@@ -134,8 +141,8 @@ namespace Asiago.Commands
                         }
                         catch (DbUpdateException ex)
                         {
-                            // This can happen due to a race condition due to the delay between looking if an item exists in the db and removing it
-                            // if it does. This really shouldn't happen often.
+                            // This can happen due to a race condition due to the delay between looking if an item exists in the db
+                            // and removing it if it does. This really shouldn't happen often.
                             await ctx.RespondAsync("Something went wrong...");
                             _logger.LogWarning(
                                 ex,
