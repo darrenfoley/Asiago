@@ -1,7 +1,7 @@
-﻿namespace Asiago.Exceptions
+﻿namespace Asiago.Common.Exceptions
 {
     [Serializable]
-    internal class ConfigurationException : SystemException
+    public class ConfigurationException : SystemException
     {
         public ConfigurationException()
             : base()

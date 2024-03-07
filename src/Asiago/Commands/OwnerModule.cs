@@ -6,7 +6,7 @@ namespace Asiago.Commands
 {
     internal class OwnerModule : BaseCommandModule
     {
-        [Command("say")]
+        [Command]
         [RequireOwner]
         public async Task Say(CommandContext ctx, ulong channelId, [RemainingText] string message)
         {
@@ -14,7 +14,7 @@ namespace Asiago.Commands
 
             DiscordEmbedBuilder embedBuilder = new()
             {
-                Color = Colours.EmbedColour,
+                Color = Colours.EmbedColourDefault,
                 Description = message,
             };
 
