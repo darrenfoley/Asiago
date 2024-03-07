@@ -4,6 +4,7 @@ using Asiago.Data.Models;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TwitchLib.Api;
 
 namespace Asiago.Commands
@@ -14,11 +15,13 @@ namespace Asiago.Commands
     {
         private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
         private readonly TwitchAPI _twitchApi;
+        private readonly ILogger<TwitchModule> _logger;
 
-        public TwitchModule(IDbContextFactory<ApplicationDbContext> dbContextFactory, TwitchAPI twitchApi)
+        public TwitchModule(IDbContextFactory<ApplicationDbContext> dbContextFactory, TwitchAPI twitchApi, ILoggerFactory loggerFactory)
         {
             _dbContextFactory = dbContextFactory;
             _twitchApi = twitchApi;
+            _logger = loggerFactory.CreateLogger<TwitchModule>();
         }
 
         [Command]
@@ -37,7 +40,6 @@ namespace Asiago.Commands
 
             using (var dbContext = _dbContextFactory.CreateDbContext())
             {
-                // we either need to do the include here or enable lazy loading
                 var guildConfig = await dbContext.GuildConfigurations.Include(gc => gc.TwitchChannels).SingleOrDefaultAsync(gc => gc.GuildId == ctx.Guild.Id);
                 if (guildConfig == null)
                 {
@@ -60,7 +62,25 @@ namespace Asiago.Commands
                 }
 
                 guildConfig.TwitchChannels.Add(twitchChannel);
-                await dbContext.SaveChangesAsync();
+                try
+                {
+                    await dbContext.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex)
+                {
+                    // This can happen due to a race condition due to the delay between looking if an item exists in the db and adding it
+                    // if not. This really shouldn't happen often.
+                    await ctx.RespondAsync("Something went wrong...");
+                    _logger.LogWarning(
+                        ex,
+                        "Failed to add subscription to Twitch channel [{twitchUserId}][{twitchChannelName}] for guild [{guildId}][{guildName}]",
+                        twitchUser.Id,
+                        twitchChannelName,
+                        ctx.Guild.Id,
+                        ctx.Guild.Name
+                        );
+                    return;
+                }
             }
 
             if (addedChannel)
@@ -107,8 +127,26 @@ namespace Asiago.Commands
                         {
                             twitchChannel.SubscribedGuilds.Remove(guild);
                         }
-                        await dbContext.SaveChangesAsync();
-                        removedSubscription = true;
+                        try
+                        {
+                            await dbContext.SaveChangesAsync();
+                            removedSubscription = true;
+                        }
+                        catch (DbUpdateException ex)
+                        {
+                            // This can happen due to a race condition due to the delay between looking if an item exists in the db and removing it
+                            // if it does. This really shouldn't happen often.
+                            await ctx.RespondAsync("Something went wrong...");
+                            _logger.LogWarning(
+                                ex,
+                                "Failed to remove subscription to Twitch channel [{twitchUserId}][{twitchChannelName}] for guild [{guildId}][{guildName}]",
+                                twitchUser.Id,
+                                twitchChannelName,
+                                ctx.Guild.Id,
+                                ctx.Guild.Name
+                                );
+                            return;
+                        }
                     }
                 }
             }
