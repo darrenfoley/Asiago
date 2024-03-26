@@ -1,4 +1,6 @@
-﻿using Asiago.Extensions;
+﻿using Asiago.Core.Discord;
+using Asiago.Core.IsThereAnyDeal;
+using Asiago.Extensions;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using IsThereAnyDeal;

@@ -1,5 +1,6 @@
-﻿using Asiago;
-using Asiago.Commands;
+﻿using Asiago.Commands;
+using Asiago.Core.IsThereAnyDeal;
+using Asiago.Core.Twitch;
 using Asiago.Data;
 using Asiago.Data.Extensions;
 using Asiago.Extensions;
@@ -8,14 +9,10 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.SlashCommands;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using TwitchLib.Api;
 using TwitchLib.Api.Core;
 
-var builder = Host.CreateApplicationBuilder();
+var builder = WebApplication.CreateBuilder();
 
 builder.Logging.AddConsole();
 
@@ -23,6 +20,7 @@ string token = builder.Configuration.GetRequiredValue<string>("DISCORD_TOKEN");
 string commandPrefix = builder.Configuration.GetRequiredValue<string>("DISCORD_COMMANDPREFIX");
 string isThereAnyDealApiKey = builder.Configuration.GetRequiredValue<string>("ISTHEREANYDEAL_APIKEY");
 string postgresConnectionString = builder.Configuration.GetRequiredPostgresConnectionString();
+string twitchWebhookSecret = builder.Configuration.GetRequiredValue<string>("TWITCH_WEBHOOKSECRET");
 ApiSettings twitchApiSettings = new()
 {
     ClientId = builder.Configuration.GetRequiredValue<string>("TWITCH_CLIENTID"),
@@ -30,11 +28,18 @@ ApiSettings twitchApiSettings = new()
 };
 
 builder.Services.AddOptions<IsThereAnyDealOptions>().Configure(options => options.ApiKey = isThereAnyDealApiKey);
+builder.Services.AddOptions<TwitchOptions>().Configure(options => options.WebhookSecret = twitchWebhookSecret);
 builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseNpgsql(postgresConnectionString));
 builder.Services.AddSingleton(_ => new TwitchAPI(settings: twitchApiSettings));
 
-var host = builder.Build();
+builder.Services.AddControllers()
+    .AddNewtonsoftJson();
+
+var app = builder.Build();
+
+app.UseRequestBodyBuffering();
+app.MapControllers();
 
 DiscordConfiguration discordConfig = new()
 {
@@ -47,7 +52,7 @@ DiscordClient discord = new(discordConfig);
 
 var slashCommands = discord.UseSlashCommands(new SlashCommandsConfiguration
 {
-    Services = host.Services,
+    Services = app.Services,
 });
 
 slashCommands.RegisterCommands<IsThereAnyDealModule>(builder.Configuration.GetValue<ulong?>("DISCORD_GUILDID"));
@@ -55,7 +60,7 @@ slashCommands.RegisterCommands<IsThereAnyDealModule>(builder.Configuration.GetVa
 // Remember: need to add DiscordIntents.MessageContents privileged intent if prefix commands need to work outside of DMs with the bot
 var commands = discord.UseCommandsNext(new CommandsNextConfiguration
 {
-    Services = host.Services,
+    Services = app.Services,
     StringPrefixes = new[] { commandPrefix },
 });
 
@@ -65,4 +70,4 @@ commands.RegisterCommands<TwitchModule>();
 
 await discord.ConnectAsync();
 
-await host.RunAsync();
+await app.RunAsync();

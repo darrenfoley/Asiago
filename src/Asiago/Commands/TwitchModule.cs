@@ -4,7 +4,6 @@ using Asiago.Data.Models;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using TwitchLib.Api;
 
 namespace Asiago.Commands

@@ -1,4 +1,5 @@
 ﻿using Asiago.Commands.Attributes;
+using Asiago.Core.Discord;
 using Asiago.Data;
 using Asiago.Data.Models;
 using DSharpPlus.CommandsNext;
