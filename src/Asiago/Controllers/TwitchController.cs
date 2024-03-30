@@ -2,6 +2,9 @@
 using Asiago.Core.Twitch;
 using Asiago.Core.Twitch.EventSub;
 using Asiago.Core.Twitch.EventSub.Models;
+using Asiago.Invocables.Twitch;
+using Coravel.Invocable;
+using Coravel.Queuing.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -17,11 +20,13 @@ namespace Asiago.Controllers
     {
         private readonly ILogger<TwitchController> _logger;
         private readonly TwitchOptions _twitchOptions;
+        private readonly IQueue _queue;
 
-        public TwitchController(ILoggerFactory loggerFactory, IOptions<TwitchOptions> twitchOptions)
+        public TwitchController(ILoggerFactory loggerFactory, IOptions<TwitchOptions> twitchOptions, IQueue queue)
         {
             _logger = loggerFactory.CreateLogger<TwitchController>();
             _twitchOptions = twitchOptions.Value;
+            _queue = queue;
         }
 
         /// <summary>
@@ -65,7 +70,7 @@ namespace Asiago.Controllers
         [RequireHeader(WebhookRequestHeaders.MessageType, WebhookRequestMessageTypes.Notification)]
         [RequireHeader(WebhookRequestHeaders.SubscriptionType, EventSubTypes.StreamOnline)]
         public async Task<IActionResult> PostEvent([FromBody] EventNotificationPayload<StreamOnlineEvent> payload)
-            => await HandleEvent(payload);
+            => await HandleEvent<StreamOnlineEvent, StreamOnlineInvocable>(payload);
 
         private async Task<(bool verified, string errorMessage)> VerifyMessageAsync()
         {
@@ -85,7 +90,12 @@ namespace Asiago.Controllers
             return (verified, errorMessage);
         }
 
-        private async Task<IActionResult> HandleEvent<T>(EventNotificationPayload<T> payload)
+        /// <summary>
+        /// Handle event notifications from Twitch.
+        /// </summary>
+        /// <typeparam name="T">The event type</typeparam>
+        /// <typeparam name="I">The invocable type</typeparam>
+        private async Task<IActionResult> HandleEvent<T, I>(EventNotificationPayload<T> payload) where I : IInvocable, IInvocableWithPayload<EventNotificationPayload<T>>
         {
             (bool verified, string errorMessage) = await VerifyMessageAsync();
             if (!verified)
@@ -93,7 +103,9 @@ namespace Asiago.Controllers
                 return Unauthorized(errorMessage);
             }
 
-            // TODO: do something
+            // TODO: validate the request (duplicate?, old? etc)
+
+            _queue.QueueInvocableWithPayload<I, EventNotificationPayload<T>>(payload);
 
             return Ok();
         }
