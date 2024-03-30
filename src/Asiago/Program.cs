@@ -5,6 +5,7 @@ using Asiago.Data;
 using Asiago.Data.Extensions;
 using Asiago.Extensions;
 using Asiago.SlashCommands;
+using Coravel;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.SlashCommands;
@@ -27,20 +28,6 @@ ApiSettings twitchApiSettings = new()
     Secret = builder.Configuration.GetRequiredValue<string>("TWITCH_CLIENTSECRET")
 };
 
-builder.Services.AddOptions<IsThereAnyDealOptions>().Configure(options => options.ApiKey = isThereAnyDealApiKey);
-builder.Services.AddOptions<TwitchOptions>().Configure(options => options.WebhookSecret = twitchWebhookSecret);
-builder.Services.AddSingleton<HttpClient>();
-builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseNpgsql(postgresConnectionString));
-builder.Services.AddSingleton(_ => new TwitchAPI(settings: twitchApiSettings));
-
-builder.Services.AddControllers()
-    .AddNewtonsoftJson();
-
-var app = builder.Build();
-
-app.UseRequestBodyBuffering();
-app.MapControllers();
-
 DiscordConfiguration discordConfig = new()
 {
     Token = token,
@@ -49,6 +36,24 @@ DiscordConfiguration discordConfig = new()
     Intents = DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents
 };
 DiscordClient discord = new(discordConfig);
+
+builder.Services.AddOptions<IsThereAnyDealOptions>().Configure(options => options.ApiKey = isThereAnyDealApiKey);
+builder.Services.AddOptions<TwitchOptions>().Configure(options => options.WebhookSecret = twitchWebhookSecret);
+builder.Services.AddSingleton<HttpClient>();
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseNpgsql(postgresConnectionString));
+builder.Services.AddSingleton(_ => new TwitchAPI(settings: twitchApiSettings));
+builder.Services.AddSingleton(discord);
+builder.Services.AddInvocablesFromNamespace("Asiago.Invocables", typeof(Program).Assembly);
+builder.Services.AddQueue();
+
+builder.Services.AddControllers()
+    .AddNewtonsoftJson();
+
+var app = builder.Build();
+
+app.EnableQueueLogging();
+app.UseRequestBodyBuffering();
+app.MapControllers();
 
 var slashCommands = discord.UseSlashCommands(new SlashCommandsConfiguration
 {

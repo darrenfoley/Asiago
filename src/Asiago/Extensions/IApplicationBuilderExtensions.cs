@@ -10,7 +10,7 @@ namespace Asiago.Extensions
         /// <summary>
         /// Adds <see cref="RequestBodyBufferingMiddleware"/> to the request pipeline.
         /// </summary>
-        internal static IApplicationBuilder UseRequestBodyBuffering(this IApplicationBuilder app)
+        public static IApplicationBuilder UseRequestBodyBuffering(this IApplicationBuilder app)
         {
             return app.UseMiddleware<RequestBodyBufferingMiddleware>();
         }
