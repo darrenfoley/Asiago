@@ -11,21 +11,8 @@ namespace Asiago.Core.Twitch.EventSub
         /// <summary>
         /// Verifies the HMAC signature of a message to ensure that it actually came from Twitch.
         /// </summary>
-        public static async Task<bool> VerifyMessageAsync(HttpRequest request, string secret)
+        public static bool VerifyMessageSignature(string requestBody, string messageId, string messageTimestamp, string messageSignature, string secret)
         {
-            if (!request.Headers.TryGetValue(WebhookRequestHeaders.MessageId, out var messageId)
-                || !request.Headers.TryGetValue(WebhookRequestHeaders.MessageTimestamp, out var messageTimestamp)
-                || !request.Headers.TryGetValue(WebhookRequestHeaders.MessageSignature, out var messageSignature))
-            {
-                return false;
-            }
-
-            string requestBody;
-            using (StreamReader reader = new(request.Body))
-            {
-                requestBody = await reader.ReadToEndAsync();
-            }
-
             byte[] hash;
             using (HMACSHA256 hmac = new(Encoding.UTF8.GetBytes(secret)))
             {
