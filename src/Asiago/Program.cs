@@ -45,6 +45,7 @@ builder.Services.AddSingleton(_ => new TwitchAPI(settings: twitchApiSettings));
 builder.Services.AddSingleton(discord);
 builder.Services.AddInvocablesFromNamespace("Asiago.Invocables", typeof(Program).Assembly);
 builder.Services.AddQueue();
+builder.Services.AddCache();
 
 builder.Services.AddControllers()
     .AddNewtonsoftJson();
