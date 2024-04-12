@@ -66,10 +66,10 @@ namespace Asiago.Controllers
                 return verifyResult.ErrorActionResult ?? BadRequest();
             }
 
-            //if (!verifyResult.Duplicate)
-            //{
-            // TODO: do something about the revocation
-            //}
+            if (!verifyResult.Duplicate)
+            {
+                _queue.QueueInvocableWithPayload<RevokeSubscriptionInvocable, RevocationNotificationPayload>(payload);
+            }
 
             return Ok();
         }
