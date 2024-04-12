@@ -1,10 +1,15 @@
 ﻿using Asiago.Commands.Attributes;
+using Asiago.Core.Twitch;
+using Asiago.Core.Twitch.EventSub;
+using Asiago.Core.Web;
 using Asiago.Data;
 using Asiago.Data.Models;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using TwitchLib.Api;
+using TwitchLib.Api.Core.Enums;
 
 namespace Asiago.Commands
 {
@@ -12,19 +17,25 @@ namespace Asiago.Commands
     [RequireMod]
     internal class TwitchModule : BaseCommandModule
     {
+        private readonly ILogger<TwitchModule> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
         private readonly TwitchAPI _twitchApi;
-        private readonly ILogger<TwitchModule> _logger;
+        private readonly TwitchOptions _twitchOptions;
+        private readonly WebOptions _webOptions;
 
         public TwitchModule(
+            ILoggerFactory loggerFactory,
             IDbContextFactory<ApplicationDbContext> dbContextFactory,
             TwitchAPI twitchApi,
-            ILoggerFactory loggerFactory
+            IOptions<TwitchOptions> twitchOptions,
+            IOptions<WebOptions> webOptions
             )
         {
+            _logger = loggerFactory.CreateLogger<TwitchModule>();
             _dbContextFactory = dbContextFactory;
             _twitchApi = twitchApi;
-            _logger = loggerFactory.CreateLogger<TwitchModule>();
+            _twitchOptions = twitchOptions.Value;
+            _webOptions = webOptions.Value;
         }
 
         [Command]
@@ -39,7 +50,6 @@ namespace Asiago.Commands
             }
 
             TwitchChannel? twitchChannel;
-            bool addedChannel = false;
 
             using (var dbContext = _dbContextFactory.CreateDbContext())
             {
@@ -61,9 +71,26 @@ namespace Asiago.Commands
                 twitchChannel = await dbContext.TwitchChannels.SingleOrDefaultAsync(tc => tc.UserId == twitchUser.Id);
                 if (twitchChannel == null)
                 {
-                    twitchChannel = new TwitchChannel { UserId = twitchUser.Id };
+                    var createSubscriptionResponse = await _twitchApi.Helix.EventSub.CreateEventSubSubscriptionAsync(
+                        EventSubTypes.StreamOnline,
+                        EventSubTypes.StreamOnlineVersion,
+                        Utilities.GenerateStreamOnlineCondition(twitchUser.Id),
+                        EventSubTransportMethod.Webhook,
+                        webhookCallback: Utilities.GenerateWebhookCallbackUrl(_webOptions.BaseUrl),
+                        webhookSecret: _twitchOptions.WebhookSecret
+                        );
+                    var twitchSubscription = createSubscriptionResponse.Subscriptions.FirstOrDefault();
+                    if (twitchSubscription == null)
+                    {
+                        await ctx.RespondAsync($"Unable to create subscription to channel [{twitchChannelName}]!");
+                        return;
+                    }
+                    twitchChannel = new TwitchChannel
+                    {
+                        UserId = twitchUser.Id,
+                        SubscriptionId = twitchSubscription.Id
+                    };
                     dbContext.TwitchChannels.Add(twitchChannel);
-                    addedChannel = true;
                 }
 
                 guildConfig.TwitchChannels.Add(twitchChannel);
@@ -88,11 +115,6 @@ namespace Asiago.Commands
                 }
             }
 
-            if (addedChannel)
-            {
-                // update TwitchWebsocketHostedService to watch for online events from this channel
-            }
-
             await ctx.RespondAsync($"Added twitch channel [{twitchChannelName}] with id [{twitchChannel.UserId}]!");
         }
 
@@ -107,9 +129,6 @@ namespace Asiago.Commands
                 return;
             }
 
-            bool deletedChannel = false;
-            bool removedSubscription = false;
-
             using (var dbContext = _dbContextFactory.CreateDbContext())
             {
 
@@ -122,12 +141,17 @@ namespace Asiago.Commands
                     var guild = twitchChannel.SubscribedGuilds.FirstOrDefault(g => g.GuildId == ctx.Guild.Id);
                     if (guild != null)
                     {
-                        // If only the current guild subscribes to this twitch channel, then just delete the twitch channel
-                        // and let things cascade
+                        // If only the current guild subscribes to this twitch channel,
+                        // then just delete the twitch channel and let things cascade
                         if (twitchChannel.SubscribedGuilds.Count == 1)
                         {
+                            bool subscriptionDeleted = await _twitchApi.Helix.EventSub.DeleteEventSubSubscriptionAsync(twitchChannel.SubscriptionId);
+                            if (!subscriptionDeleted)
+                            {
+                                await ctx.RespondAsync("Something went wrong...");
+                                return;
+                            }
                             dbContext.Remove(twitchChannel);
-                            deletedChannel = true;
                         }
                         else
                         {
@@ -136,7 +160,8 @@ namespace Asiago.Commands
                         try
                         {
                             await dbContext.SaveChangesAsync();
-                            removedSubscription = true;
+                            await ctx.RespondAsync($"Removed twitch channel [{twitchChannelName}] subscription for this guild");
+                            return;
                         }
                         catch (DbUpdateException ex)
                         {
@@ -157,19 +182,7 @@ namespace Asiago.Commands
                 }
             }
 
-            if (deletedChannel)
-            {
-                // update TwitchWebsocketHostedService to stop watching for online events from this channel
-            }
-
-            if (removedSubscription)
-            {
-                await ctx.RespondAsync($"Removed twitch channel [{twitchChannelName}] subscription for this guild");
-            }
-            else
-            {
-                await ctx.RespondAsync($"Couldn't find twitch channel [{twitchChannelName}] subscription for this guild");
-            }
+            await ctx.RespondAsync($"Not subscribed to Twitch channel [{twitchChannelName}] in this guild");
         }
 
         [Command]

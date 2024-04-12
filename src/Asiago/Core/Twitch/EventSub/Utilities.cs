@@ -9,7 +9,7 @@ namespace Asiago.Core.Twitch.EventSub
     internal static class Utilities
     {
         /// <summary>
-        /// Verifies the HMAC signature of a message to ensure that it actually came from Twitch.
+        /// Verify the HMAC signature of a message to ensure that it actually came from Twitch.
         /// </summary>
         public static bool VerifyMessageSignature(string requestBody, string messageId, string messageTimestamp, string messageSignature, string secret)
         {
@@ -25,5 +25,16 @@ namespace Asiago.Core.Twitch.EventSub
             byte[] messageSignatureBytes = Encoding.UTF8.GetBytes(messageSignature.ToString());
             return CryptographicOperations.FixedTimeEquals(hmacSignatureBytes, messageSignatureBytes);
         }
+
+        /// <summary>
+        /// Generate the condition parameter for subscribing to stream online events.
+        /// </summary>
+        public static Dictionary<string, string> GenerateStreamOnlineCondition(string twitchUserId)
+            => new() { ["broadcaster_user_id"] = twitchUserId };
+
+        /// <summary>
+        /// Generate the webhook callback url.
+        /// </summary>
+        public static string GenerateWebhookCallbackUrl(Uri baseUrl) => new Uri(baseUrl, "api/webhooks/Twitch").ToString();
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Asiago.Commands;
 using Asiago.Core.IsThereAnyDeal;
 using Asiago.Core.Twitch;
+using Asiago.Core.Web;
 using Asiago.Data;
 using Asiago.Data.Extensions;
 using Asiago.Extensions;
@@ -19,6 +20,7 @@ builder.Logging.AddConsole();
 
 string token = builder.Configuration.GetRequiredValue<string>("DISCORD_TOKEN");
 string commandPrefix = builder.Configuration.GetRequiredValue<string>("DISCORD_COMMANDPREFIX");
+Uri baseUrl = builder.Configuration.GetRequiredValue<Uri>("BASEURL");
 string isThereAnyDealApiKey = builder.Configuration.GetRequiredValue<string>("ISTHEREANYDEAL_APIKEY");
 string postgresConnectionString = builder.Configuration.GetRequiredPostgresConnectionString();
 string twitchWebhookSecret = builder.Configuration.GetRequiredValue<string>("TWITCH_WEBHOOKSECRET");
@@ -37,6 +39,7 @@ DiscordConfiguration discordConfig = new()
 };
 DiscordClient discord = new(discordConfig);
 
+builder.Services.AddOptions<WebOptions>().Configure(options => options.BaseUrl = baseUrl);
 builder.Services.AddOptions<IsThereAnyDealOptions>().Configure(options => options.ApiKey = isThereAnyDealApiKey);
 builder.Services.AddOptions<TwitchOptions>().Configure(options => options.WebhookSecret = twitchWebhookSecret);
 builder.Services.AddSingleton<HttpClient>();
