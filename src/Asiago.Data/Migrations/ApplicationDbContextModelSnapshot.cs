@@ -16,6 +16,7 @@ namespace Asiago.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("asiago")
                 .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
@@ -37,7 +38,7 @@ namespace Asiago.Data.Migrations
 
                     b.HasKey("GuildId");
 
-                    b.ToTable("GuildConfigurations");
+                    b.ToTable("GuildConfigurations", "asiago");
                 });
 
             modelBuilder.Entity("Asiago.Data.Models.TwitchChannel", b =>
@@ -45,9 +46,13 @@ namespace Asiago.Data.Migrations
                     b.Property<string>("UserId")
                         .HasColumnType("text");
 
+                    b.Property<string>("SubscriptionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("UserId");
 
-                    b.ToTable("TwitchChannels");
+                    b.ToTable("TwitchChannels", "asiago");
                 });
 
             modelBuilder.Entity("GuildConfigurationTwitchChannels", b =>
@@ -62,7 +67,7 @@ namespace Asiago.Data.Migrations
 
                     b.HasIndex("TwitchChannelsUserId");
 
-                    b.ToTable("GuildConfigurationTwitchChannels");
+                    b.ToTable("GuildConfigurationTwitchChannels", "asiago");
                 });
 
             modelBuilder.Entity("GuildConfigurationTwitchChannels", b =>

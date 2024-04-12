@@ -5,16 +5,36 @@
 namespace Asiago.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class AddTwitchChannels : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.EnsureSchema(
+                name: "asiago");
+
             migrationBuilder.CreateTable(
-                name: "TwitchChannels",
+                name: "GuildConfigurations",
+                schema: "asiago",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "text", nullable: false)
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    AdminRoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    ModRoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    TwitchUpdateChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GuildConfigurations", x => x.GuildId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TwitchChannels",
+                schema: "asiago",
+                columns: table => new
+                {
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    SubscriptionId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -23,6 +43,7 @@ namespace Asiago.Data.Migrations
 
             migrationBuilder.CreateTable(
                 name: "GuildConfigurationTwitchChannels",
+                schema: "asiago",
                 columns: table => new
                 {
                     SubscribedGuildsGuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
@@ -34,12 +55,14 @@ namespace Asiago.Data.Migrations
                     table.ForeignKey(
                         name: "FK_GuildConfigurationTwitchChannels_GuildConfigurations_Subscr~",
                         column: x => x.SubscribedGuildsGuildId,
+                        principalSchema: "asiago",
                         principalTable: "GuildConfigurations",
                         principalColumn: "GuildId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_GuildConfigurationTwitchChannels_TwitchChannels_TwitchChann~",
                         column: x => x.TwitchChannelsUserId,
+                        principalSchema: "asiago",
                         principalTable: "TwitchChannels",
                         principalColumn: "UserId",
                         onDelete: ReferentialAction.Cascade);
@@ -47,6 +70,7 @@ namespace Asiago.Data.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_GuildConfigurationTwitchChannels_TwitchChannelsUserId",
+                schema: "asiago",
                 table: "GuildConfigurationTwitchChannels",
                 column: "TwitchChannelsUserId");
         }
@@ -55,10 +79,16 @@ namespace Asiago.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "GuildConfigurationTwitchChannels");
+                name: "GuildConfigurationTwitchChannels",
+                schema: "asiago");
 
             migrationBuilder.DropTable(
-                name: "TwitchChannels");
+                name: "GuildConfigurations",
+                schema: "asiago");
+
+            migrationBuilder.DropTable(
+                name: "TwitchChannels",
+                schema: "asiago");
         }
     }
 }
