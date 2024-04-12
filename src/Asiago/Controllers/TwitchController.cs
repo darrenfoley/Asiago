@@ -148,11 +148,13 @@ namespace Asiago.Controllers
             }
 
             // Guard against replay attacks
-            if (!DateTime.TryParse(messageTimestamp, out DateTime messageDateTime))
+            if (!DateTimeOffset.TryParse(messageTimestamp, out DateTimeOffset messageTime))
             {
                 return new(false, false, BadRequest($"{WebhookRequestHeaders.MessageTimestamp} header value has invalid format."));
             }
-            if (messageDateTime < DateTime.UtcNow.Subtract(_messageExpirationMinutes))
+
+            DateTimeOffset expirationCutoffTime = DateTimeOffset.Now.Subtract(_messageExpirationMinutes);
+            if (messageTime < expirationCutoffTime)
             {
                 return new(
                     false,
