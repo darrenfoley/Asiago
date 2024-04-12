@@ -8,7 +8,7 @@ namespace Asiago.Core.Twitch.EventSub.Models
     public class Subscription
     {
         /// <summary>
-        /// Your client ID.
+        /// The ID of the subscription.
         /// </summary>
         public required string Id { get; set; }
         /// <summary>

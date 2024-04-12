@@ -131,7 +131,6 @@ namespace Asiago.Commands
 
             using (var dbContext = _dbContextFactory.CreateDbContext())
             {
-
                 var twitchChannel = await dbContext.TwitchChannels
                     .Include(tc => tc.SubscribedGuilds)
                     .SingleOrDefaultAsync(tc => tc.UserId == twitchUser.Id);

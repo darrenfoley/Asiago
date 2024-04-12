@@ -12,7 +12,7 @@ namespace Asiago.Invocables.Twitch
     /// <summary>
     /// An <see cref="IInvocable"/> that handles <see cref="StreamOnlineEvent"/> notifications from Twitch.
     /// </summary>
-    public class StreamOnlineInvocable : IInvocable, IInvocableWithPayload<EventNotificationPayload<StreamOnlineEvent>>
+    internal class StreamOnlineInvocable : IInvocable, IInvocableWithPayload<EventNotificationPayload<StreamOnlineEvent>>
     {
         public required EventNotificationPayload<StreamOnlineEvent> Payload { get; set; }
 
