@@ -45,7 +45,7 @@ namespace Asiago.Commands
             var twitchUser = twitchGetUsersResponse.Users.FirstOrDefault();
             if (twitchUser == null)
             {
-                await ctx.RespondAsync($"Unable to find twitch channel [{twitchChannelName}]!");
+                await ctx.RespondAsync($"Unable to find Twitch channel [{twitchChannelName}]");
                 return;
             }
 
@@ -64,7 +64,7 @@ namespace Asiago.Commands
 
                 if (guildConfig.TwitchChannels.Any(tc => tc.UserId == twitchUser.Id))
                 {
-                    await ctx.RespondAsync($"Already added twitch channel [{twitchChannelName}]!");
+                    await ctx.RespondAsync($"Already added Twitch channel [{twitchChannelName}]");
                     return;
                 }
 
@@ -82,7 +82,7 @@ namespace Asiago.Commands
                     var twitchSubscription = createSubscriptionResponse.Subscriptions.FirstOrDefault();
                     if (twitchSubscription == null)
                     {
-                        await ctx.RespondAsync($"Unable to create subscription to channel [{twitchChannelName}]!");
+                        await ctx.RespondAsync($"Unable to create subscription to channel [{twitchChannelName}]");
                         return;
                     }
                     twitchChannel = new TwitchChannel
@@ -115,7 +115,7 @@ namespace Asiago.Commands
                 }
             }
 
-            await ctx.RespondAsync($"Added twitch channel [{twitchChannelName}] with id [{twitchChannel.UserId}]!");
+            await ctx.RespondAsync($"Added Twitch channel [{twitchChannelName}]");
         }
 
         [Command]
@@ -125,7 +125,7 @@ namespace Asiago.Commands
             var twitchUser = twitchGetUsersResponse.Users.FirstOrDefault();
             if (twitchUser == null)
             {
-                await ctx.RespondAsync($"Unable to find a twitch channel named [{twitchChannelName}]!");
+                await ctx.RespondAsync($"Unable to find a Twitch channel named [{twitchChannelName}]");
                 return;
             }
 
@@ -159,7 +159,7 @@ namespace Asiago.Commands
                         try
                         {
                             await dbContext.SaveChangesAsync();
-                            await ctx.RespondAsync($"Removed twitch channel [{twitchChannelName}] subscription for this guild");
+                            await ctx.RespondAsync($"Removed Twitch channel [{twitchChannelName}] subscription for this guild");
                             return;
                         }
                         catch (DbUpdateException ex)
@@ -201,7 +201,8 @@ namespace Asiago.Commands
                 var twitchGetUsersResponse = await _twitchApi.Helix.Users.GetUsersAsync(twitchUserIds);
                 if (twitchGetUsersResponse.Users.Count() > 0)
                 {
-                    string message = "This guild is subscribed to the following twitch channels:";
+                    // TODO: Think about using interactivity with paging for this
+                    string message = "This guild is subscribed to the following Twitch channels:";
                     foreach (var twitchUser in twitchGetUsersResponse.Users)
                     {
                         message += $"\n* {twitchUser.DisplayName}";
@@ -211,7 +212,7 @@ namespace Asiago.Commands
                 }
             }
 
-            await ctx.RespondAsync("This guild is not subscribed to any twitch channels");
+            await ctx.RespondAsync("This guild is not subscribed to any Twitch channels");
         }
 
     }

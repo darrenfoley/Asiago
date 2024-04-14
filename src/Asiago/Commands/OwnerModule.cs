@@ -1,7 +1,5 @@
-﻿using Asiago.Core.Discord;
-using DSharpPlus.CommandsNext;
+﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.Entities;
 
 namespace Asiago.Commands
 {
@@ -13,13 +11,7 @@ namespace Asiago.Commands
         {
             var channel = await ctx.Client.GetChannelAsync(channelId);
 
-            DiscordEmbedBuilder embedBuilder = new()
-            {
-                Color = Colours.EmbedColourDefault,
-                Description = message,
-            };
-
-            await channel.SendMessageAsync(embedBuilder);
+            await channel.SendMessageAsync(message);
         }
     }
 }
