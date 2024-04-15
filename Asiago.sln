@@ -8,7 +8,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IsThereAnyDeal", "src\IsThe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asiago.Data", "src\Asiago.Data\Asiago.Data.csproj", "{7F05AD01-0BA4-4250-8745-7AF575BFD272}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Asiago.Common", "src\Asiago.Common\Asiago.Common.csproj", "{1C596BE3-9285-4394-B048-FAB6538205EA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asiago.Common", "src\Asiago.Common\Asiago.Common.csproj", "{1C596BE3-9285-4394-B048-FAB6538205EA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
