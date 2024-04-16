@@ -1,9 +1,12 @@
-﻿using Asiago.Core.Twitch.EventSub;
+﻿using Asiago.Core.Discord;
+using Asiago.Core.Twitch.EventSub;
 using Asiago.Core.Twitch.EventSub.Models;
 using Asiago.Data;
 using Asiago.Data.Models;
+using Asiago.Extensions;
 using Coravel.Invocable;
 using DSharpPlus;
+using DSharpPlus.Entities;
 using Microsoft.EntityFrameworkCore;
 using TwitchLib.Api;
 
@@ -83,6 +86,43 @@ namespace Asiago.Invocables.Twitch
                 return;
             }
 
+            Uri twitchBaseUrl = new("https://twitch.tv/");
+            string streamUrl = new Uri(twitchBaseUrl, stream.UserLogin).ToString();
+            // 440x248 are the dimensions Twitch uses for its stream previews on their site as of now, so that seems like a good place to start
+            string imageUrl = stream.ThumbnailUrl.Replace("{width}", "440").Replace("{height}", "248");
+            var embedBuilder = new DiscordEmbedBuilder()
+            {
+                Color = Colours.EmbedColourDefault,
+                Title = stream.Title,
+                Url = streamUrl,
+                ImageUrl = imageUrl,
+            }.WithAsiagoNotificationFooter();
+
+            var getUsersResponses = await _twitchApi.Helix.Users.GetUsersAsync([Payload.Event.BroadcasterUserId]);
+            var user = getUsersResponses.Users.SingleOrDefault();
+            string streamerLiveMessage = $"{stream.UserName} is live on Twitch!";
+            embedBuilder.WithAuthor(streamerLiveMessage, streamUrl, user?.ProfileImageUrl);
+
+            // If they are streaming a game, add game image and info
+            if (stream.GameId != null)
+            {
+                var getGamesResponse = await _twitchApi.Helix.Games.GetGamesAsync([stream.GameId]);
+                var game = getGamesResponse.Games.SingleOrDefault();
+                if (game == null)
+                {
+                    _logger.LogWarning("Unable to find game info for game ID [{id}]", stream.GameId);
+                }
+                else
+                {
+                    string thumbnailUrl = game.BoxArtUrl.Replace("{width}", "128").Replace("{height}", "128");
+                    embedBuilder.WithThumbnail(thumbnailUrl);
+                }
+            }
+            if (stream.GameName != null)
+            {
+                embedBuilder.AddField("Streaming", stream.GameName);
+            }
+
             foreach (var guildConfig in twitchChannel.SubscribedGuilds)
             {
                 var guild = await _discordClient.GetGuildAsync(guildConfig.GuildId);
@@ -93,8 +133,7 @@ namespace Asiago.Invocables.Twitch
                 else
                 {
                     var channel = guild.GetChannel(guildConfig.TwitchUpdateChannelId.Value);
-                    // TODO: use discord embed
-                    await channel.SendMessageAsync($"{stream.UserName} is live on Twitch! Streaming {stream.Title}");
+                    await channel.SendMessageAsync(embedBuilder);
                 }
             }
         }
