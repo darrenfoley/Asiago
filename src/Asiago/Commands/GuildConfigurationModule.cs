@@ -78,7 +78,7 @@ namespace Asiago.Commands
         [RequireAdmin]
         public async Task SetTwitchUpdateChannel(CommandContext ctx, DiscordChannel channel)
         {
-            if (channel.Type != DSharpPlus.ChannelType.Text)
+            if (channel.Type != DiscordChannelType.Text)
             {
                 await ctx.RespondAsync($"Cannot set twitch update channel to non-text channel {channel.Mention}");
                 return;
