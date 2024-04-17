@@ -13,8 +13,7 @@ using TwitchLib.Api.Core.Enums;
 
 namespace Asiago.Commands
 {
-    [Group]
-    [RequireMod]
+    [Group, RequireMod]
     internal class TwitchModule : BaseCommandModule
     {
         private readonly ILogger<TwitchModule> _logger;
@@ -49,9 +48,7 @@ namespace Asiago.Commands
                 return;
             }
 
-            TwitchChannel? twitchChannel;
-
-            using (var dbContext = _dbContextFactory.CreateDbContext())
+            await using (var dbContext = _dbContextFactory.CreateDbContext())
             {
                 var guildConfig = await dbContext.GuildConfigurations
                     .Include(gc => gc.TwitchChannels)
@@ -68,12 +65,12 @@ namespace Asiago.Commands
                     return;
                 }
 
-                twitchChannel = await dbContext.TwitchChannels.SingleOrDefaultAsync(tc => tc.UserId == twitchUser.Id);
+                var twitchChannel = await dbContext.TwitchChannels.SingleOrDefaultAsync(tc => tc.UserId == twitchUser.Id);
                 if (twitchChannel == null)
                 {
                     var createSubscriptionResponse = await _twitchApi.Helix.EventSub.CreateEventSubSubscriptionAsync(
                         EventSubTypes.StreamOnline,
-                        EventSubTypes.StreamOnlineVersion,
+                        EventSubTypes.Versions.StreamOnlineVersion,
                         Utilities.GenerateStreamOnlineCondition(twitchUser.Id),
                         EventSubTransportMethod.Webhook,
                         webhookCallback: Utilities.GenerateWebhookCallbackUrl(_webOptions.BaseUrl),
@@ -82,7 +79,15 @@ namespace Asiago.Commands
                     var twitchSubscription = createSubscriptionResponse.Subscriptions.FirstOrDefault();
                     if (twitchSubscription == null)
                     {
-                        await ctx.RespondAsync($"Unable to create subscription to channel [{twitchChannelName}]");
+                        await ctx.RespondAsync("Something went wrong...");
+                        _logger.LogError(
+                            "Call to Twitch API to create EventSub subscription to Twitch channel [{twitchUserId}][{twitchChannelName}] " +
+                            "for guild [{guildId}][{guildName}] failed",
+                            twitchUser.Id,
+                            twitchChannelName,
+                            ctx.Guild.Id,
+                            ctx.Guild.Name
+                            );
                         return;
                     }
                     twitchChannel = new TwitchChannel
@@ -129,7 +134,7 @@ namespace Asiago.Commands
                 return;
             }
 
-            using (var dbContext = _dbContextFactory.CreateDbContext())
+            await using (var dbContext = _dbContextFactory.CreateDbContext())
             {
                 var twitchChannel = await dbContext.TwitchChannels
                     .Include(tc => tc.SubscribedGuilds)
@@ -188,7 +193,7 @@ namespace Asiago.Commands
         public async Task List(CommandContext ctx)
         {
             List<string> twitchUserIds;
-            using (var dbContext = _dbContextFactory.CreateDbContext())
+            await using (var dbContext = _dbContextFactory.CreateDbContext())
             {
                 twitchUserIds = await dbContext.TwitchChannels
                     .Where(tc => tc.SubscribedGuilds.Any(g => g.GuildId == ctx.Guild.Id))
@@ -196,24 +201,27 @@ namespace Asiago.Commands
                     .ToListAsync();
             }
 
-            if (twitchUserIds.Count > 0)
+            if (twitchUserIds.Count == 0)
             {
-                var twitchGetUsersResponse = await _twitchApi.Helix.Users.GetUsersAsync(twitchUserIds);
-                if (twitchGetUsersResponse.Users.Count() > 0)
-                {
-                    // TODO: Think about using interactivity with paging for this
-                    string message = "This guild is subscribed to the following Twitch channels:";
-                    foreach (var twitchUser in twitchGetUsersResponse.Users)
-                    {
-                        message += $"\n* {twitchUser.DisplayName}";
-                    }
-                    await ctx.RespondAsync(message);
-                    return;
-                }
+                await ctx.RespondAsync("This guild is not subscribed to any Twitch channels");
+                return;
             }
 
-            await ctx.RespondAsync("This guild is not subscribed to any Twitch channels");
-        }
+            var twitchGetUsersResponse = await _twitchApi.Helix.Users.GetUsersAsync(twitchUserIds);
+            if (twitchGetUsersResponse.Users.Length == 0)
+            {
+                await ctx.RespondAsync("Something went wrong...");
+                _logger.LogError("Failed to look up Twitch users for guild [{guildId}][{guildName}]", ctx.Guild.Id, ctx.Guild.Name);
+                return;
+            }
 
+            // TODO: Think about using interactivity with paging for this
+            string message = "This guild is subscribed to the following Twitch channels:";
+            foreach (var twitchUser in twitchGetUsersResponse.Users)
+            {
+                message += $"\n* {twitchUser.DisplayName}";
+            }
+            await ctx.RespondAsync(message);
+        }
     }
 }

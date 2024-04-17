@@ -9,9 +9,16 @@
         /// The specified broadcaster starts a stream.
         /// </summary>
         public const string StreamOnline = "stream.online";
+
         /// <summary>
-        /// The version number that identifies the desired definition of the stream online subscription type to use.
+        /// Versions for EventSub types.
         /// </summary>
-        public const string StreamOnlineVersion = "1";
+        internal static class Versions
+        {
+            /// <summary>
+            /// The version number that identifies the desired definition of the stream online subscription type to use.
+            /// </summary>
+            public const string StreamOnlineVersion = "1";
+        }
     }
 }

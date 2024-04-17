@@ -34,7 +34,7 @@ namespace Asiago.Core.Twitch.EventSub.Models
         [JsonConverter(typeof(StrictStringEnumConverter))]
         public required StreamType Type { get; set; }
         /// <summary>
-        /// The timestamp at which the stream went online at.
+        /// The time when the stream went online.
         /// </summary>
         [JsonProperty("started_at")]
         public required DateTime StartedAt;

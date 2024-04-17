@@ -22,7 +22,7 @@ namespace Asiago.Core.Twitch.EventSub
             string hmacSignature = "sha256=" + Convert.ToHexString(hash).ToLower();
 
             byte[] hmacSignatureBytes = Encoding.UTF8.GetBytes(hmacSignature);
-            byte[] messageSignatureBytes = Encoding.UTF8.GetBytes(messageSignature.ToString());
+            byte[] messageSignatureBytes = Encoding.UTF8.GetBytes(messageSignature);
             return CryptographicOperations.FixedTimeEquals(hmacSignatureBytes, messageSignatureBytes);
         }
 

@@ -32,11 +32,11 @@ namespace Asiago.Core.Twitch.EventSub.Models
         /// </summary>
         public required Dictionary<string, string> Condition { get; set; }
         /// <summary>
-        /// The transport details Twitch used this notification.
+        /// The transport details Twitch used for this notification.
         /// </summary>
         public required Transport Transport { get; set; }
         /// <summary>
-        /// The time the notification was created.
+        /// The time when the notification was created.
         /// </summary>
         [JsonProperty("created_at")]
         public required DateTime CreatedAt { get; set; }
