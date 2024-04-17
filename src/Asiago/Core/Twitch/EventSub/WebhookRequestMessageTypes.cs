@@ -25,7 +25,7 @@ namespace Asiago.Core.Twitch.EventSub
         /// </remarks>
         public const string WebhookCallbackVerification = "webhook_callback_verification";
         /// <summary>
-        /// Contains the reason why Twitch revoked your subscription.
+        /// The notification payload contains the reason why Twitch revoked your subscription.
         /// </summary>
         /// <remarks>
         /// See <see cref="RevocationNotificationPayload"/>.

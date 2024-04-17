@@ -24,7 +24,7 @@ namespace Asiago.Commands
         {
             int rowsAffected;
 
-            using (var dbContext = _dbContextFactory.CreateDbContext())
+            await using (var dbContext = _dbContextFactory.CreateDbContext())
             {
                 rowsAffected = await dbContext.GuildConfigurations.Upsert(new GuildConfiguration
                 {
@@ -52,7 +52,7 @@ namespace Asiago.Commands
         {
             int rowsAffected;
 
-            using (var dbContext = _dbContextFactory.CreateDbContext())
+            await using (var dbContext = _dbContextFactory.CreateDbContext())
             {
                 rowsAffected = await dbContext.GuildConfigurations.Upsert(new GuildConfiguration
                 {
@@ -86,7 +86,7 @@ namespace Asiago.Commands
 
             int rowsAffected;
 
-            using (var dbContext = _dbContextFactory.CreateDbContext())
+            await using (var dbContext = _dbContextFactory.CreateDbContext())
             {
                 rowsAffected = await dbContext.GuildConfigurations.Upsert(new GuildConfiguration
                 {

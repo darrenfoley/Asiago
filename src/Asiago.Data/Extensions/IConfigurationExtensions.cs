@@ -45,7 +45,7 @@ namespace Asiago.Data.Extensions
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 throw new ConfigurationException(
-                    "Unable to construct postgres connection string. Missing/invalid environment POSTGRES_* environment variables?"
+                    "Unable to construct postgres connection string. Missing/invalid POSTGRES_* environment variables?"
                     );
             }
             return connectionString;

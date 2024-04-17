@@ -7,9 +7,6 @@ namespace Asiago.Core.JsonConverters
     /// </summary>
     internal class StrictStringEnumConverter : StringEnumConverter
     {
-        public StrictStringEnumConverter()
-        {
-            AllowIntegerValues = false;
-        }
+        public StrictStringEnumConverter() => AllowIntegerValues = false;
     }
 }

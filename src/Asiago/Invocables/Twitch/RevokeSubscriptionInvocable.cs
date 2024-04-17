@@ -52,39 +52,37 @@ namespace Asiago.Invocables.Twitch
         {
             if (Payload.Reason == RevocationReasons.UserRemoved)
             {
-                using (var dbContext = _dbContextFactory.CreateDbContext())
+                await using var dbContext = _dbContextFactory.CreateDbContext();
+                var twitchChannel = await dbContext.TwitchChannels
+                    .SingleOrDefaultAsync(tc => tc.SubscriptionId == Payload.Subscription.Id);
+
+                if (twitchChannel == null)
                 {
-                    var twitchChannel = await dbContext.TwitchChannels
-                        .SingleOrDefaultAsync(tc => tc.SubscriptionId == Payload.Subscription.Id);
+                    _logger.LogWarning(
+                        "Twitch channel subscription [{subscriptionId}] doesn't exist in the database. It may have already been deleted",
+                        Payload.Subscription.Id
+                        );
+                    return;
+                }
 
-                    if (twitchChannel == null)
-                    {
-                        _logger.LogWarning(
-                            "Twitch channel subscription [{subscriptionId}] doesn't exist in the database. It may have already been deleted",
-                            Payload.Subscription.Id
-                            );
-                        return;
-                    }
+                dbContext.Remove(twitchChannel);
 
-                    dbContext.Remove(twitchChannel);
-
-                    try
-                    {
-                        await dbContext.SaveChangesAsync();
-                        _logger.LogInformation(
-                            "Removed Twitch channel [{userId}] subscription [{subscriptionId}] from the database in response to revocation notification",
-                            twitchChannel.UserId,
-                            twitchChannel.SubscriptionId
-                            );
-                    }
-                    catch (DbUpdateException ex)
-                    {
-                        _logger.LogWarning(
-                            ex,
-                            "Failed to remove Twitch channel [{userId}] from the database in response to revocation notification. It may have already been deleted",
-                            twitchChannel.UserId
-                            );
-                    }
+                try
+                {
+                    await dbContext.SaveChangesAsync();
+                    _logger.LogInformation(
+                        "Removed Twitch channel [{userId}] subscription [{subscriptionId}] from the database in response to revocation notification",
+                        twitchChannel.UserId,
+                        twitchChannel.SubscriptionId
+                        );
+                }
+                catch (DbUpdateException ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Failed to remove Twitch channel [{userId}] from the database in response to revocation notification. It may have already been deleted",
+                        twitchChannel.UserId
+                        );
                 }
             }
             else

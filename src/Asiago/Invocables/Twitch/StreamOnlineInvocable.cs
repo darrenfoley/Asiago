@@ -47,7 +47,7 @@ namespace Asiago.Invocables.Twitch
                 );
 
             TwitchChannel? twitchChannel;
-            using (var dbContext = _dbContextFactory.CreateDbContext())
+            await using (var dbContext = _dbContextFactory.CreateDbContext())
             {
                 twitchChannel = await dbContext.TwitchChannels
                     .Include(tc => tc.SubscribedGuilds)
