@@ -140,8 +140,9 @@ namespace Asiago.Controllers
                 if (!messageVerified)
                 {
                     _logger.LogError(
-                        "Signature validation failed for Twitch webhook request from [{ip}]",
-                        HttpContext.Connection.RemoteIpAddress
+                        "Signature validation failed for Twitch webhook request from IP: [{ip}], X-Forwarded-For: [{xForwardedFor}]",
+                        HttpContext.Connection.RemoteIpAddress?.MapToIPv4(),
+                        Request.Headers["X-Forwarded-For"]
                         );
                     return new(false, false, Unauthorized("Message signature validation failed."));
                 }
