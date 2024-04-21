@@ -5,17 +5,24 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using IsThereAnyDeal;
 using IsThereAnyDeal.Models;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 
 namespace Asiago.SlashCommands
 {
     internal class IsThereAnyDealModule : ApplicationCommandModule
     {
+        private readonly IStringLocalizer<IsThereAnyDealModule> _stringLocalizer;
         private readonly IsThereAnyDealOptions _itadOptions;
         private readonly HttpClient _httpClient;
 
-        public IsThereAnyDealModule(IOptions<IsThereAnyDealOptions> itadOptions, HttpClient httpClient)
+        public IsThereAnyDealModule(
+            IStringLocalizer<IsThereAnyDealModule> stringLocalizer,
+            IOptions<IsThereAnyDealOptions> itadOptions,
+            HttpClient httpClient
+            )
         {
+            _stringLocalizer = stringLocalizer;
             _itadOptions = itadOptions.Value;
             _httpClient = httpClient;
         }
@@ -37,7 +44,7 @@ namespace Asiago.SlashCommands
                     new DiscordEmbedBuilder()
                     {
                         Color = Colours.EmbedColourError,
-                        Description = $"I can't find a game with the title \"{title}\""
+                        Description = _stringLocalizer["ErrorGameNotFound", title]
                     }));
                 return;
             }
@@ -56,7 +63,7 @@ namespace Asiago.SlashCommands
                     new DiscordEmbedBuilder()
                     {
                         Color = Colours.EmbedColourError,
-                        Description = $"I don't have deal info for \"{title}\""
+                        Description = _stringLocalizer["ErrorDealInfoNotFound", title]
                     }));
                 return;
             }
@@ -69,7 +76,7 @@ namespace Asiago.SlashCommands
             };
 
             string bestPriceString = GetCurrentBestPriceString(gamePrices, gameOverview, country);
-            embedBuilder.AddField("Current Best Price", bestPriceString);
+            embedBuilder.AddField(_stringLocalizer["CurrentBestPrice"], bestPriceString);
 
             if (gameOverview.LowestHistoricalPrice is not null)
             {
@@ -81,13 +88,13 @@ namespace Asiago.SlashCommands
                     + historicalPriceCutString
                     + $" on {gameOverview.LowestHistoricalPrice.Store}\n{gameOverview.LowestHistoricalPrice.FormattedRecorded}";
 
-                embedBuilder.AddField("Lowest Historical Price", historicalPriceString);
+                embedBuilder.AddField(_stringLocalizer["LowestHistoricalPrice"], historicalPriceString);
             }
 
             if (gameInfo.Reviews is not null && gameInfo.Reviews.TryGetValue("steam", out GameReview? gameReview))
             {
                 string formattedReview = $"{gameReview.Text} ({gameReview.PercentPositive}% of {gameReview.TotalVotes})";
-                embedBuilder.AddField("Steam Review", formattedReview);
+                embedBuilder.AddField(_stringLocalizer["SteamReview"], formattedReview);
             }
 
             if (gameInfo.ImageUrl is not null)

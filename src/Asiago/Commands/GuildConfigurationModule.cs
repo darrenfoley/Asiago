@@ -5,16 +5,22 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 
 namespace Asiago.Commands
 {
     internal class GuildConfigurationModule : BaseCommandModule
     {
         private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
+        private readonly IStringLocalizer<GuildConfigurationModule> _stringLocalizer;
 
-        public GuildConfigurationModule(IDbContextFactory<ApplicationDbContext> dbContextFactory)
+        public GuildConfigurationModule(
+            IDbContextFactory<ApplicationDbContext> dbContextFactory,
+            IStringLocalizer<GuildConfigurationModule> stringLocalizer
+            )
         {
             _dbContextFactory = dbContextFactory;
+            _stringLocalizer = stringLocalizer;
         }
 
         [Command]
@@ -38,11 +44,11 @@ namespace Asiago.Commands
 
             if (rowsAffected == 1)
             {
-                await ctx.RespondAsync($"Admin role has been set to {role.Mention}");
+                await ctx.RespondAsync(_stringLocalizer["AdminRoleSet", role.Mention]);
             }
             else
             {
-                await ctx.RespondAsync("Something went wrong...");
+                await ctx.RespondAsync(_stringLocalizer["ErrorMessage"]);
             }
         }
 
@@ -66,11 +72,11 @@ namespace Asiago.Commands
 
             if (rowsAffected == 1)
             {
-                await ctx.RespondAsync($"Mod role has been set to {role.Mention}");
+                await ctx.RespondAsync(_stringLocalizer["ModRoleSet", role.Mention]);
             }
             else
             {
-                await ctx.RespondAsync("Something went wrong...");
+                await ctx.RespondAsync(_stringLocalizer["ErrorMessage"]);
             }
         }
 
@@ -80,7 +86,7 @@ namespace Asiago.Commands
         {
             if (channel.Type != DiscordChannelType.Text)
             {
-                await ctx.RespondAsync($"Cannot set twitch update channel to non-text channel {channel.Mention}");
+                await ctx.RespondAsync(_stringLocalizer["ErrorDiscordNonTextChannel", channel.Mention]);
                 return;
             }
 
@@ -100,11 +106,11 @@ namespace Asiago.Commands
 
             if (rowsAffected == 1)
             {
-                await ctx.RespondAsync($"Twitch update channel has been set to {channel.Mention}");
+                await ctx.RespondAsync(_stringLocalizer["TwitchUpdateChannelSet", channel.Mention]);
             }
             else
             {
-                await ctx.RespondAsync("Something went wrong...");
+                await ctx.RespondAsync(_stringLocalizer["ErrorMessage"]);
             }
         }
     }

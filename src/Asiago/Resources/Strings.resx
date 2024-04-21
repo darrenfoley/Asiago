@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>	
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AdminRoleSet" xml:space="preserve">
+    <value>Admin role has been set to {0}</value>
+  </data>
+  <data name="CurrentBestPrice" xml:space="preserve">
+    <value>Current Best Price</value>
+  </data>
+  <data name="ErrorDealInfoNotFound" xml:space="preserve">
+    <value>I don't have deal info for \"{0}\"</value>
+  </data>
+  <data name="ErrorDiscordNonTextChannel" xml:space="preserve">
+    <value>Cannot set twitch update channel to non-text channel {0}</value>
+  </data>
+  <data name="ErrorGameNotFound" xml:space="preserve">
+    <value>I can't find a game with the title \"{0}\"</value>
+  </data>
+  <data name="ErrorMessage" xml:space="preserve">
+    <value>Something went wrong...</value>
+  </data>
+  <data name="ErrorRequestHeaderInvalidFormat" xml:space="preserve">
+    <value>{0} header value has invalid format.</value>
+  </data>
+  <data name="ErrorRequestHeadersMissing" xml:space="preserve">
+    <value>Missing required request headers.</value>
+  </data>
+  <data name="ErrorRequestMessageExpired" xml:space="preserve">
+    <value>Message is no longer valid as it is older than {0} minutes.</value>
+  </data>
+  <data name="ErrorRequestMessageSignatureFailed" xml:space="preserve">
+    <value>Message signature validation failed.</value>
+  </data>
+  <data name="ErrorTwitchChannelNotFound" xml:space="preserve">
+    <value>Unable to find Twitch channel [{0}]</value>
+  </data>
+  <data name="ErrorTwitchChannelSubscriptionNotFound" xml:space="preserve">
+    <value>Not subscribed to Twitch channel [{0}] in this guild</value>
+  </data>
+  <data name="ErrorTwitchChannelSubscriptionsEmpty" xml:space="preserve">
+    <value>This guild is not subscribed to any Twitch channels</value>
+  </data>
+  <data name="LiveOnTwitch" xml:space="preserve">
+    <value>{0} is live on Twitch!</value>
+  </data>
+  <data name="LowestHistoricalPrice" xml:space="preserve">
+    <value>Lowest Historical Price</value>
+  </data>
+  <data name="ModRoleSet" xml:space="preserve">
+    <value>Mod role has been set to {0}</value>
+  </data>
+  <data name="SteamReview" xml:space="preserve">
+    <value>Steam Review</value>
+  </data>
+  <data name="TwitchChannelAdded" xml:space="preserve">
+    <value>Added Twitch channel [{0}]</value>
+  </data>
+  <data name="TwitchChannelSubscriptionList" xml:space="preserve">
+    <value>This guid is subscribed to the following Twitch channels:</value>
+  </data>
+  <data name="TwitchChannelSubscriptionRemoved" xml:space="preserve">
+    <value>Removed Twitch channel [{0}] subscription from this guild</value>
+  </data>
+  <data name="TwitchUpdateChannelSet" xml:space="preserve">
+    <value>Twitch update channel has been set to {0}</value>
+  </data>
+  <data name="WarningTwitchChannelAlreadyAdded" xml:space="preserve">
+    <value>Already added Twitch channel [{0}]</value>
+  </data>
+</root>

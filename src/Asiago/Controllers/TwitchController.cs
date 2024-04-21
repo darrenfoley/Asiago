@@ -7,6 +7,7 @@ using Coravel.Cache.Interfaces;
 using Coravel.Invocable;
 using Coravel.Queuing.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 
@@ -25,13 +26,21 @@ namespace Asiago.Controllers
         private static readonly TimeSpan _messageExpirationMinutes = TimeSpan.FromMinutes(10);
 
         private readonly ILogger<TwitchController> _logger;
+        private readonly IStringLocalizer<TwitchController> _stringLocalizer;
         private readonly TwitchOptions _twitchOptions;
         private readonly IQueue _queue;
         private readonly ICache _cache;
 
-        public TwitchController(ILoggerFactory loggerFactory, IOptions<TwitchOptions> twitchOptions, IQueue queue, ICache cache)
+        public TwitchController(
+            ILoggerFactory loggerFactory,
+            IStringLocalizer<TwitchController> stringLocalizer,
+            IOptions<TwitchOptions> twitchOptions,
+            IQueue queue,
+            ICache cache
+            )
         {
             _logger = loggerFactory.CreateLogger<TwitchController>();
+            _stringLocalizer = stringLocalizer;
             _twitchOptions = twitchOptions.Value;
             _queue = queue;
             _cache = cache;
@@ -122,7 +131,7 @@ namespace Asiago.Controllers
                 || !headers.TryGetValue(WebhookRequestHeaders.MessageSignature, out StringValues messageSignatureHeader)
                 || (string?)messageSignatureHeader is not string messageSignature)
             {
-                return new(false, false, BadRequest("Missing required request headers."));
+                return new(false, false, BadRequest(_stringLocalizer["ErrorRequestHeadersMissing"]));
             }
 
             // Validate signature
@@ -144,14 +153,14 @@ namespace Asiago.Controllers
                         HttpContext.Connection.RemoteIpAddress?.MapToIPv4(),
                         Request.Headers["X-Forwarded-For"]
                         );
-                    return new(false, false, Unauthorized("Message signature validation failed."));
+                    return new(false, false, Unauthorized(_stringLocalizer["ErrorRequestMessageSignatureFailed"]));
                 }
             }
 
             // Guard against replay attacks
             if (!DateTimeOffset.TryParse(messageTimestamp, out DateTimeOffset messageTime))
             {
-                return new(false, false, BadRequest($"{WebhookRequestHeaders.MessageTimestamp} header value has invalid format."));
+                return new(false, false, BadRequest(_stringLocalizer["ErrorRequestHeaderInvalidFormat", WebhookRequestHeaders.MessageTimestamp]));
             }
 
             DateTimeOffset expirationCutoffTime = DateTimeOffset.Now.Subtract(_messageExpirationMinutes);
@@ -160,7 +169,7 @@ namespace Asiago.Controllers
                 return new(
                     false,
                     false,
-                    BadRequest($"Message is no longer valid as it is older than {_messageExpirationMinutes.Minutes} minutes.")
+                    BadRequest(_stringLocalizer["ErrorRequestMessageExpired", _messageExpirationMinutes.Minutes])
                     );
             }
 
