@@ -7,6 +7,7 @@ using Asiago.Data.Models;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using TwitchLib.Api;
 using TwitchLib.Api.Core.Enums;
@@ -18,6 +19,7 @@ namespace Asiago.Commands
     {
         private readonly ILogger<TwitchModule> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
+        private readonly IStringLocalizer<TwitchModule> _stringLocalizer;
         private readonly TwitchAPI _twitchApi;
         private readonly TwitchOptions _twitchOptions;
         private readonly WebOptions _webOptions;
@@ -25,6 +27,7 @@ namespace Asiago.Commands
         public TwitchModule(
             ILoggerFactory loggerFactory,
             IDbContextFactory<ApplicationDbContext> dbContextFactory,
+            IStringLocalizer<TwitchModule> stringLocalizer,
             TwitchAPI twitchApi,
             IOptions<TwitchOptions> twitchOptions,
             IOptions<WebOptions> webOptions
@@ -32,6 +35,7 @@ namespace Asiago.Commands
         {
             _logger = loggerFactory.CreateLogger<TwitchModule>();
             _dbContextFactory = dbContextFactory;
+            _stringLocalizer = stringLocalizer;
             _twitchApi = twitchApi;
             _twitchOptions = twitchOptions.Value;
             _webOptions = webOptions.Value;
@@ -44,7 +48,7 @@ namespace Asiago.Commands
             var twitchUser = twitchGetUsersResponse.Users.FirstOrDefault();
             if (twitchUser == null)
             {
-                await ctx.RespondAsync($"Unable to find Twitch channel [{twitchChannelName}]");
+                await ctx.RespondAsync(_stringLocalizer["ErrorTwitchChannelNotFound", twitchChannelName]);
                 return;
             }
 
@@ -61,7 +65,7 @@ namespace Asiago.Commands
 
                 if (guildConfig.TwitchChannels.Any(tc => tc.UserId == twitchUser.Id))
                 {
-                    await ctx.RespondAsync($"Already added Twitch channel [{twitchChannelName}]");
+                    await ctx.RespondAsync(_stringLocalizer["WarningTwitchChannelAlreadyAdded", twitchChannelName]);
                     return;
                 }
 
@@ -79,7 +83,7 @@ namespace Asiago.Commands
                     var twitchSubscription = createSubscriptionResponse.Subscriptions.FirstOrDefault();
                     if (twitchSubscription == null)
                     {
-                        await ctx.RespondAsync("Something went wrong...");
+                        await ctx.RespondAsync(_stringLocalizer["ErrorMessage"]);
                         _logger.LogError(
                             "Call to Twitch API to create EventSub subscription to Twitch channel [{twitchUserId}][{twitchChannelName}] " +
                             "for guild [{guildId}][{guildName}] failed",
@@ -107,7 +111,7 @@ namespace Asiago.Commands
                 {
                     // This can happen due to a race condition due to the delay between looking if an item exists in the db and adding it
                     // if not. This really shouldn't happen often.
-                    await ctx.RespondAsync("Something went wrong...");
+                    await ctx.RespondAsync(_stringLocalizer["ErrorMessage"]);
                     _logger.LogWarning(
                         ex,
                         "Failed to add subscription to Twitch channel [{twitchUserId}][{twitchChannelName}] for guild [{guildId}][{guildName}]",
@@ -120,7 +124,7 @@ namespace Asiago.Commands
                 }
             }
 
-            await ctx.RespondAsync($"Added Twitch channel [{twitchChannelName}]");
+            await ctx.RespondAsync(_stringLocalizer["TwitchChannelAdded", twitchChannelName]);
         }
 
         [Command]
@@ -130,7 +134,7 @@ namespace Asiago.Commands
             var twitchUser = twitchGetUsersResponse.Users.FirstOrDefault();
             if (twitchUser == null)
             {
-                await ctx.RespondAsync($"Unable to find a Twitch channel named [{twitchChannelName}]");
+                await ctx.RespondAsync(_stringLocalizer["ErrorTwitchChannelNotFound", twitchChannelName]);
                 return;
             }
 
@@ -152,7 +156,7 @@ namespace Asiago.Commands
                             bool subscriptionDeleted = await _twitchApi.Helix.EventSub.DeleteEventSubSubscriptionAsync(twitchChannel.SubscriptionId);
                             if (!subscriptionDeleted)
                             {
-                                await ctx.RespondAsync("Something went wrong...");
+                                await ctx.RespondAsync(_stringLocalizer["ErrorMessage"]);
                                 return;
                             }
                             dbContext.Remove(twitchChannel);
@@ -164,14 +168,14 @@ namespace Asiago.Commands
                         try
                         {
                             await dbContext.SaveChangesAsync();
-                            await ctx.RespondAsync($"Removed Twitch channel [{twitchChannelName}] subscription for this guild");
+                            await ctx.RespondAsync(_stringLocalizer["TwitchChannelSubscriptionRemoved", twitchChannelName]);
                             return;
                         }
                         catch (DbUpdateException ex)
                         {
                             // This can happen due to a race condition due to the delay between looking if an item exists in the db
                             // and removing it if it does. This really shouldn't happen often.
-                            await ctx.RespondAsync("Something went wrong...");
+                            await ctx.RespondAsync(_stringLocalizer["ErrorMessage"]);
                             _logger.LogWarning(
                                 ex,
                                 "Failed to remove subscription to Twitch channel [{twitchUserId}][{twitchChannelName}] for guild [{guildId}][{guildName}]",
@@ -186,7 +190,7 @@ namespace Asiago.Commands
                 }
             }
 
-            await ctx.RespondAsync($"Not subscribed to Twitch channel [{twitchChannelName}] in this guild");
+            await ctx.RespondAsync(_stringLocalizer["ErrorTwitchChannelSubscriptionNotFound", twitchChannelName]);
         }
 
         [Command]
@@ -203,20 +207,20 @@ namespace Asiago.Commands
 
             if (twitchUserIds.Count == 0)
             {
-                await ctx.RespondAsync("This guild is not subscribed to any Twitch channels");
+                await ctx.RespondAsync(_stringLocalizer["ErrorTwitchChannelSubscriptionsEmpty"]);
                 return;
             }
 
             var twitchGetUsersResponse = await _twitchApi.Helix.Users.GetUsersAsync(twitchUserIds);
             if (twitchGetUsersResponse.Users.Length == 0)
             {
-                await ctx.RespondAsync("Something went wrong...");
+                await ctx.RespondAsync(_stringLocalizer["ErrorMessage"]);
                 _logger.LogError("Failed to look up Twitch users for guild [{guildId}][{guildName}]", ctx.Guild.Id, ctx.Guild.Name);
                 return;
             }
 
             // TODO: Think about using interactivity with paging for this
-            string message = "This guild is subscribed to the following Twitch channels:";
+            string message = _stringLocalizer["TwitchChannelSubscriptionList"];
             foreach (var twitchUser in twitchGetUsersResponse.Users)
             {
                 message += $"\n* {twitchUser.DisplayName}";

@@ -8,6 +8,7 @@ using Coravel.Invocable;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using TwitchLib.Api;
 
 namespace Asiago.Invocables.Twitch
@@ -23,18 +24,21 @@ namespace Asiago.Invocables.Twitch
         private readonly DiscordClient _discordClient;
         private readonly ILogger<StreamOnlineInvocable> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
+        private readonly IStringLocalizer<StreamOnlineInvocable> _stringLocalizer;
 
         public StreamOnlineInvocable(
             TwitchAPI twitchApi,
             DiscordClient discordClient,
             ILoggerFactory loggerFactory,
-            IDbContextFactory<ApplicationDbContext> dbContextFactory
+            IDbContextFactory<ApplicationDbContext> dbContextFactory,
+            IStringLocalizer<StreamOnlineInvocable> stringLocalizer
             )
         {
             _twitchApi = twitchApi;
             _discordClient = discordClient;
             _logger = loggerFactory.CreateLogger<StreamOnlineInvocable>();
             _dbContextFactory = dbContextFactory;
+            _stringLocalizer = stringLocalizer;
         }
 
         public async Task Invoke()
@@ -100,7 +104,7 @@ namespace Asiago.Invocables.Twitch
 
             var getUsersResponses = await _twitchApi.Helix.Users.GetUsersAsync([Payload.Event.BroadcasterUserId]);
             var user = getUsersResponses.Users.SingleOrDefault();
-            string streamerLiveMessage = $"{stream.UserName} is live on Twitch!";
+            string streamerLiveMessage = _stringLocalizer["LiveOnTwitch", stream.UserName];
             embedBuilder.WithAuthor(streamerLiveMessage, streamUrl, user?.ProfileImageUrl);
 
             // If they are streaming a game, add game image and info

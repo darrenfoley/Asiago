@@ -49,6 +49,7 @@ builder.Services.AddSingleton(discord);
 builder.Services.AddInvocablesFromNamespace("Asiago.Invocables", typeof(Program).Assembly);
 builder.Services.AddQueue();
 builder.Services.AddCache();
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
 builder.Services.AddControllers()
     .AddNewtonsoftJson();
