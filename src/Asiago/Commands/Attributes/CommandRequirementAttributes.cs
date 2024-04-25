@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Asiago.Commands.Attributes
 {
     /// <summary>
-    /// Checks that the member who triggered the command has the guild's admin role or is the bot owner.
+    /// Checks that the member who triggered the command has the guild's admin role or is the guild owner or bot owner.
     /// The command must be executed from a guild.
     /// </summary>
     internal class RequireAdminAttribute : CheckBaseAttribute
@@ -19,8 +19,9 @@ namespace Asiago.Commands.Attributes
                 return false;
             }
 
+            // Check if current user is the guild owner or the bot owner
             RequireOwnerAttribute requireOwnerAttr = new();
-            if (await requireOwnerAttr.ExecuteCheckAsync(ctx, help))
+            if (ctx.Member.IsOwner || await requireOwnerAttr.ExecuteCheckAsync(ctx, help))
             {
                 return true;
             }
@@ -37,7 +38,7 @@ namespace Asiago.Commands.Attributes
     }
 
     /// <summary>
-    /// Checks that the member who triggered the command has the guild's mod role, admin role, or is the bot owner.
+    /// Checks that the member who triggered the command has the guild's mod role, admin role, or is the guild owner or bot owner.
     /// The command must be executed from a guild.
     /// </summary>
     internal class RequireModAttribute : CheckBaseAttribute
@@ -50,8 +51,9 @@ namespace Asiago.Commands.Attributes
                 return false;
             }
 
+            // Check if current user is the guild owner or the bot owner
             RequireOwnerAttribute requireOwnerAttr = new();
-            if (await requireOwnerAttr.ExecuteCheckAsync(ctx, help))
+            if (ctx.Member.IsOwner || await requireOwnerAttr.ExecuteCheckAsync(ctx, help))
             {
                 return true;
             }
