@@ -1,23 +1,21 @@
 ﻿using IsThereAnyDeal.Extensions;
 using IsThereAnyDeal.Models;
 using Newtonsoft.Json;
+using System.Net.Http.Json;
 
 namespace IsThereAnyDeal
 {
-    public class IsThereAnyDealClient
+    public class IsThereAnyDealClient(string apiKey, HttpClient httpClient)
     {
-        private const string BaseUrl = "https://api.isthereanydeal.com";
+        private static readonly Uri BaseUrl = new("https://api.isthereanydeal.com");
 
-        private readonly string _apiKey;
-        private readonly HttpClient _httpClient;
+        private readonly string _apiKey = apiKey;
+        private readonly HttpClient _httpClient = httpClient;
 
-        public IsThereAnyDealClient(string apiKey, HttpClient httpClient)
-        {
-            _apiKey = apiKey;
-            _httpClient = httpClient;
-        }
-
-        public async Task<string?> GetGameId(string title)
+        /// <summary>
+        /// Looks up a game by its title.
+        /// </summary>
+        public async Task<Game?> LookupGameAsync(string title)
         {
             Dictionary<string, string> queryParameters = new()
             {
@@ -25,87 +23,90 @@ namespace IsThereAnyDeal
                 { "title", title }
             };
 
-            var plainResponse = await GetAsync<ResponseModels.GamePlain>("/v02/game/plain/", queryParameters);
+            var lookupResult = await GetAsync<GameLookupResult>("/games/lookup/v1", queryParameters);
 
-            if (plainResponse is not null
-                && plainResponse.Meta.Active
-                && plainResponse.Meta.Match == "title"
-                && plainResponse.Data is not null)
+            if (lookupResult != null && lookupResult.Found)
             {
-                return plainResponse.Data.Plain;
+                return lookupResult.Game;
             }
 
             return null;
         }
 
-        public async Task<GameOverview?> GetGameOverview(string id, string countryCode)
+        /// <summary>
+        /// Gets price overview information for a game by id.
+        /// </summary>
+        public async Task<PriceOverview?> GetGamePriceOverviewAsync(Guid id, string countryCode)
         {
             Dictionary<string, string> queryParameters = new()
             {
                 { "key", _apiKey },
-                { "plains", id },
                 { "country", countryCode }
             };
 
-            var overviewResponse = await GetAsync<ResponseModels.GameOverview>("/v01/game/overview/", queryParameters);
-            return overviewResponse?.Extract(id);
+            var gameOverview = await PostAsync<GameOverview, List<Guid>>("/games/overview/v2", queryParameters, [id]);
+            return gameOverview?.Prices.SingleOrDefault(p => p.Id == id);
         }
 
-        public async Task<List<GamePrice>?> GetGamePrices(string id, string countryCode)
+        /// <summary>
+        /// Get game information.
+        /// </summary>
+        public async Task<GameInfo?> GetGameInfoAsync(Guid id)
         {
             Dictionary<string, string> queryParameters = new()
             {
                 { "key", _apiKey },
-                { "plains", id },
-                { "country", countryCode }
+                { "id", id.ToString() }
             };
 
-            var pricesResponse = await GetAsync<ResponseModels.GamePrices>("/v01/game/prices/", queryParameters);
-            return pricesResponse?.Extract(id);
+            return await GetAsync<GameInfo>("/games/info/v2", queryParameters);
         }
 
-        public async Task<GameInfo?> GetGameInfo(string id)
+        /// <summary>
+        /// Search for games by title.
+        /// </summary>
+        public async Task<List<Game>?> SearchGamesAsync(string title, int limit)
         {
             Dictionary<string, string> queryParameters = new()
             {
                 { "key", _apiKey },
-                { "plains", id }
+                { "title", title },
+                { "limit", limit.ToString() }
             };
 
-            var infoResponse = await GetAsync<ResponseModels.GameInfo>("/v01/game/info/", queryParameters);
-            return infoResponse?.Extract(id);
-        }
-
-        public async Task<List<SearchResult>?> GetSearch(string query, int limit, bool fuzzy = true)
-        {
-            Dictionary<string, string> queryParameters = new()
-            {
-                { "key", _apiKey },
-                { "q", query },
-                { "limit", limit.ToString() },
-                { "strict", fuzzy ? "0" : "1" }
-            };
-
-            var searchResponse = await GetAsync<ResponseModels.Search>("/v02/search/search/", queryParameters);
-            return searchResponse?.Extract();
+            return await GetAsync<List<Game>>("/games/search/v1", queryParameters);
         }
 
         private async Task<T?> GetAsync<T>(string path, Dictionary<string, string> queryParameters) where T : class
         {
-            UriBuilder uriBuilder = new($"{BaseUrl}{path}")
-            {
-                Query = queryParameters.ToQueryString()
-            };
-            var response = await _httpClient.GetAsync(uriBuilder.Uri);
+            Uri url = BuildUrl(path, queryParameters);
+            var response = await _httpClient.GetAsync(url);
+            return await ParseResponse<T>(response);
+        }
 
+        private async Task<T?> PostAsync<T, B>(string path, Dictionary<string, string> queryParameters, B body) where T : class
+        {
+            Uri url = BuildUrl(path, queryParameters);
+            var response = await _httpClient.PostAsJsonAsync(url, body);
+            return await ParseResponse<T>(response);
+        }
+
+        private static Uri BuildUrl(string path, Dictionary<string, string> queryParameters)
+            => new UriBuilder(BaseUrl)
+            {
+                Path = path,
+                Query = queryParameters.ToQueryString()
+            }.Uri;
+
+        private static async Task<T?> ParseResponse<T>(HttpResponseMessage response) where T : class
+        {
             if (!response.IsSuccessStatusCode)
             {
                 return null;
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var deserializedObject = JsonConvert.DeserializeObject<T>(content);
-            return deserializedObject;
+            return JsonConvert.DeserializeObject<T>(content);
         }
     }
 }

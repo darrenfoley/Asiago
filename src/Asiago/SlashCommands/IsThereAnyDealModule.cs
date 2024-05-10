@@ -1,6 +1,7 @@
 ﻿using Asiago.Core.Discord;
 using Asiago.Core.IsThereAnyDeal;
 using Asiago.Extensions;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using IsThereAnyDeal;
@@ -21,7 +22,7 @@ namespace Asiago.SlashCommands
         }
 
         [SlashCommand("gamedeals", "Get game deals")]
-        public async Task GetDeals(
+        public async Task GameDeals(
             InteractionContext ctx,
             [Option("title", "The title of the game"), Autocomplete(typeof(GameTitleAutocompleteProvider))] string title,
             [Option("country", "The country for which you want deals")] Country country
@@ -30,8 +31,8 @@ namespace Asiago.SlashCommands
             await ctx.DeferAsync();
 
             IsThereAnyDealClient itadClient = new(_itadOptions.ApiKey, _httpClient);
-            string? gameId = await itadClient.GetGameId(title);
-            if (gameId is null)
+            Game? game = await itadClient.LookupGameAsync(title);
+            if (game is null)
             {
                 await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder().AddEmbed(
                     new DiscordEmbedBuilder()
@@ -42,15 +43,13 @@ namespace Asiago.SlashCommands
                 return;
             }
 
-            var gameInfoTask = itadClient.GetGameInfo(gameId);
-            var gameOverviewTask = itadClient.GetGameOverview(gameId, country.ToString());
-            var gamePricesTask = itadClient.GetGamePrices(gameId, country.ToString());
+            Task<GameInfo?> gameInfoTask = itadClient.GetGameInfoAsync(game.Id);
+            Task<PriceOverview?> priceOverviewTask = itadClient.GetGamePriceOverviewAsync(game.Id, country.ToString());
 
-            var gameInfo = await gameInfoTask;
-            var gameOverview = await gameOverviewTask;
-            var gamePrices = await gamePricesTask;
+            GameInfo? gameInfo = await gameInfoTask;
+            PriceOverview? priceOverview = await priceOverviewTask;
 
-            if (gameInfo is null || gameOverview is null)
+            if (gameInfo is null || priceOverview is null || priceOverview.Current is null)
             {
                 await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder().AddEmbed(
                     new DiscordEmbedBuilder()
@@ -65,68 +64,60 @@ namespace Asiago.SlashCommands
             {
                 Color = Colours.EmbedColourDefault,
                 Title = gameInfo.Title,
-                Url = gameInfo.IsThereAnyDealGameUrl,
+                Url = gameInfo.Urls.Game.ToString(),
             };
 
-            string bestPriceString = GetCurrentBestPriceString(gamePrices, gameOverview, country);
+            string bestPriceString = GetCurrentBestPriceString(priceOverview.Current, country);
             embedBuilder.AddField("Current Best Price", bestPriceString);
 
-            if (gameOverview.LowestHistoricalPrice is not null)
+            if (priceOverview.Lowest is not null)
             {
-                string historicalPriceCutString = gameOverview.LowestHistoricalPrice.PriceCutPercent > 0
-                    ? $" (-{gameOverview.LowestHistoricalPrice.PriceCutPercent}%)"
-                    : "";
-
-                string historicalPriceString = gameOverview.LowestHistoricalPrice.Price.ToFormattedPrice(country.ToString())
-                    + historicalPriceCutString
-                    + $" on {gameOverview.LowestHistoricalPrice.Store}\n{gameOverview.LowestHistoricalPrice.FormattedRecorded}";
-
+                string historicalPriceString = GetHistoricalLowestPriceString(priceOverview.Lowest, country);
                 embedBuilder.AddField("Lowest Historical Price", historicalPriceString);
             }
 
-            if (gameInfo.Reviews is not null && gameInfo.Reviews.TryGetValue("steam", out GameReview? gameReview))
+            Review? steamReview = gameInfo.Reviews
+                .SingleOrDefault(r => string.Equals(r.Source, "steam", StringComparison.OrdinalIgnoreCase));
+            if (steamReview != null)
             {
-                string formattedReview = $"{gameReview.Text} ({gameReview.PercentPositive}% of {gameReview.TotalVotes})";
-                embedBuilder.AddField("Steam Review", formattedReview);
+                string formattedSteamReview = $"{steamReview.Score}% of {steamReview.Count}";
+                embedBuilder.AddField("Steam Review", formattedSteamReview);
             }
 
-            if (gameInfo.ImageUrl is not null)
+            // Pick the best image url available
+            Uri? imageUrl = gameInfo.Assets.Banner600
+                ?? gameInfo.Assets.Banner400
+                ?? gameInfo.Assets.Banner300
+                ?? gameInfo.Assets.BoxArt
+                ?? gameInfo.Assets.Banner145;
+            if (imageUrl != null)
             {
-                embedBuilder.WithImageUrl(gameInfo.ImageUrl);
+                embedBuilder.WithImageUrl(imageUrl);
             }
 
             await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder().AddEmbed(embedBuilder));
         }
 
-        private static string GetCurrentBestPriceString(List<GamePrice>? gamePrices, GameOverview gameOverview, Country country)
+        private static string GetHistoricalLowestPriceString(HistoricalLow historicalLow, Country country)
         {
-            string priceCutString = "";
-            if (gameOverview.BestCurrentPrice.PriceCutPercent > 0)
-            {
-                priceCutString = $" (-{gameOverview.BestCurrentPrice.PriceCutPercent}%)";
-            }
+            string historicalPriceCutString = historicalLow.Cut > 0 ? $" (-{historicalLow.Cut}%)" : "";
 
-            string bestPriceString = $"{gameOverview.BestCurrentPrice.Price.ToFormattedPrice(country.ToString())}{priceCutString}"
-                + $" on [{gameOverview.BestCurrentPrice.Store}]({gameOverview.BestCurrentPrice.Url})";
+            string historicalPriceString = historicalLow.Price.Amount.ToFormattedPrice(country.ToString()) + historicalPriceCutString
+                + " on " + historicalLow.Shop.Name
+                + "\n" + Formatter.Timestamp(historicalLow.Timestamp);
 
-            // Sometimes the game prices api call returns bad/duplicate data
-            // where it says all the prices are 0 in one of the copies
-            GamePrice? gamePrice = gamePrices?.FirstOrDefault(
-                price => price.Store == gameOverview.BestCurrentPrice.Store && price.RegularPrice > 0
-                );
+            return historicalPriceString;
+        }
 
-            bestPriceString += "\nRegular ";
-            if (gamePrice is null)
-            {
-                // Calculate the regular price if we don't have good data for it
-                decimal discountPercent = 1 - (gameOverview.BestCurrentPrice.PriceCutPercent / 100m);
-                decimal regularPrice = gameOverview.BestCurrentPrice.Price / discountPercent;
-                bestPriceString += regularPrice.ToFormattedPrice(country.ToString());
-            }
-            else
-            {
-                bestPriceString += gamePrice.RegularPrice.ToFormattedPrice(country.ToString());
-            }
+        private static string GetCurrentBestPriceString(OverviewDeal currentDealInfo, Country country)
+        {
+            string priceCutString = currentDealInfo.Cut > 0 ? $" (-{currentDealInfo.Cut}%)" : "";
+            string expiryString = currentDealInfo.Expiry != null ? $"\nExpires {Formatter.Timestamp(currentDealInfo.Expiry.Value)}" : "";
+
+            string bestPriceString = currentDealInfo.Price.Amount.ToFormattedPrice(country.ToString()) + priceCutString
+                + $" on [{currentDealInfo.Shop.Name}]({currentDealInfo.Url})"
+                + expiryString
+                + "\nRegular " + currentDealInfo.Regular.Amount.ToFormattedPrice(country.ToString());
 
             return bestPriceString;
         }
@@ -157,13 +148,13 @@ namespace Asiago.SlashCommands
             if (!string.IsNullOrWhiteSpace(value))
             {
                 IsThereAnyDealClient itadClient = new(_itadOptions.ApiKey, _httpClient);
-                var searchResults = await itadClient.GetSearch(value, 25);
-                if (searchResults is not null)
+                List<Game>? games = await itadClient.SearchGamesAsync(value, 25);
+                if (games is not null)
                 {
-                    return searchResults.ConvertAll(result => new DiscordAutoCompleteChoice(result.Title, result.Title));
+                    return games.ConvertAll(game => new DiscordAutoCompleteChoice(game.Title, game.Title));
                 }
             }
-            return Enumerable.Empty<DiscordAutoCompleteChoice>();
+            return [];
         }
     }
 }

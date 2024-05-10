@@ -1,14 +1,13 @@
 ﻿namespace IsThereAnyDeal.Models
 {
+    /// <summary>
+    /// Basic price overview for selected games.
+    /// </summary>
     public class GameOverview
     {
-        public GameBestCurrentPrice BestCurrentPrice { get; }
-        public GameLowestHistoricalPrice? LowestHistoricalPrice { get; }
+        public required List<PriceOverview> Prices { get; set; }
 
-        public GameOverview(GameBestCurrentPrice bestCurrentPrice, GameLowestHistoricalPrice? lowestHistoricalPrice)
-        {
-            BestCurrentPrice = bestCurrentPrice;
-            LowestHistoricalPrice = lowestHistoricalPrice;
-        }
+        // I don't see us caring about bundles anytime soon...or probably ever?
+        // public required List<BundleOverview> Bundles { get; set; }
     }
 }
