@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Converters;
 
-namespace Asiago.Core.JsonConverters
+namespace Asiago.Common.JsonConverters
 {
     /// <summary>
     /// Converts an System.Enum to and from its name string value without allowing integer values.

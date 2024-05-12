@@ -1,4 +1,4 @@
-﻿using Asiago.Core.JsonConverters;
+﻿using Asiago.Common.JsonConverters;
 using Newtonsoft.Json;
 
 namespace IsThereAnyDeal.Models
