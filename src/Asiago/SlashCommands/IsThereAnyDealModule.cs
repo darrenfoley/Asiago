@@ -34,12 +34,7 @@ namespace Asiago.SlashCommands
             Game? game = await itadClient.LookupGameAsync(title);
             if (game is null)
             {
-                await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder().AddEmbed(
-                    new DiscordEmbedBuilder()
-                    {
-                        Color = Colours.EmbedColourError,
-                        Description = $"I can't find a game with the title \"{title}\""
-                    }));
+                await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder { Content = $"Unable to find game [{title}]" });
                 return;
             }
 
@@ -51,12 +46,7 @@ namespace Asiago.SlashCommands
 
             if (gameInfo is null || priceOverview is null || priceOverview.Current is null)
             {
-                await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder().AddEmbed(
-                    new DiscordEmbedBuilder()
-                    {
-                        Color = Colours.EmbedColourError,
-                        Description = $"I don't have deal info for \"{title}\""
-                    }));
+                await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder { Content = $"Deal info unavailable for [{title}]" });
                 return;
             }
 
