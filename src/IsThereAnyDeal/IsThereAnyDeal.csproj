@@ -8,6 +8,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Asiago.Data\Asiago.Data.csproj" />
+    <ProjectReference Include="..\Asiago.Common\Asiago.Common.csproj" />
   </ItemGroup>
 </Project>
