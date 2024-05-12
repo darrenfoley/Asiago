@@ -68,9 +68,10 @@ namespace Asiago.SlashCommands
 
             Review? steamReview = gameInfo.Reviews
                 .SingleOrDefault(r => string.Equals(r.Source, "steam", StringComparison.OrdinalIgnoreCase));
-            if (steamReview != null)
+            if (steamReview?.Score != null)
             {
-                string formattedSteamReview = $"{steamReview.Score}% of {steamReview.Count}";
+                string countString = steamReview.Count != null ? " of " + steamReview.Count : "";
+                string formattedSteamReview = $"[{steamReview.Score}%{countString}]({steamReview.Url})";
                 embedBuilder.AddField("Steam Review", formattedSteamReview);
             }
 
