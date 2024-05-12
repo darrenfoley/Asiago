@@ -75,6 +75,12 @@ namespace Asiago.SlashCommands
                 embedBuilder.AddField("Steam Review", formattedSteamReview);
             }
 
+            if (gameInfo.Tags.Count != 0)
+            {
+                string tags = string.Join(", ", gameInfo.Tags);
+                embedBuilder.AddField("Tags", tags);
+            }
+
             // Pick the best image url available
             Uri? imageUrl = gameInfo.Assets.Banner600
                 ?? gameInfo.Assets.Banner400
