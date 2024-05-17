@@ -1,9 +1,8 @@
-﻿using IsThereAnyDeal.Extensions;
-using IsThereAnyDeal.Models;
+﻿using Asiago.Core.IsThereAnyDeal.Models;
+using Asiago.Extensions;
 using Newtonsoft.Json;
-using System.Net.Http.Json;
 
-namespace IsThereAnyDeal
+namespace Asiago.Core.IsThereAnyDeal
 {
     public class IsThereAnyDealClient(string apiKey, HttpClient httpClient)
     {

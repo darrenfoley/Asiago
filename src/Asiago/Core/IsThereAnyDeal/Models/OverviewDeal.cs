@@ -1,8 +1,8 @@
-﻿using Asiago.Common.JsonConverters;
+﻿using Asiago.Core.JsonConverters;
 using Newtonsoft.Json;
 using System.Runtime.Serialization;
 
-namespace IsThereAnyDeal.Models
+namespace Asiago.Core.IsThereAnyDeal.Models
 {
     public class OverviewDeal
     {

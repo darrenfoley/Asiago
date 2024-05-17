@@ -1,4 +1,4 @@
-﻿namespace IsThereAnyDeal.Models
+﻿namespace Asiago.Core.IsThereAnyDeal.Models
 {
     /// <summary>
     /// Result returned when looking up a game.

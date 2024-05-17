@@ -1,4 +1,4 @@
-﻿namespace IsThereAnyDeal.Extensions
+﻿namespace Asiago.Extensions
 {
     internal static class DictionaryExtensions
     {

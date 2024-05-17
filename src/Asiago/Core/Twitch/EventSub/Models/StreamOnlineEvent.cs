@@ -1,4 +1,4 @@
-﻿using Asiago.Common.JsonConverters;
+﻿using Asiago.Core.JsonConverters;
 using Newtonsoft.Json;
 using System.Runtime.Serialization;
 

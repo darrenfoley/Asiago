@@ -22,6 +22,5 @@
   <ItemGroup>
     <ProjectReference Include="..\Asiago.Common\Asiago.Common.csproj" />
     <ProjectReference Include="..\Asiago.Data\Asiago.Data.csproj" />
-    <ProjectReference Include="..\IsThereAnyDeal\IsThereAnyDeal.csproj" />
   </ItemGroup>
 </Project>
