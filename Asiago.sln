@@ -4,8 +4,6 @@ VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asiago", "src\Asiago\Asiago.csproj", "{E69B251E-4665-4BD8-8F2B-D3EF45708F32}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IsThereAnyDeal", "src\IsThereAnyDeal\IsThereAnyDeal.csproj", "{EB13F25A-5BB8-405E-90CD-598FB2DDCEF1}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asiago.Data", "src\Asiago.Data\Asiago.Data.csproj", "{7F05AD01-0BA4-4250-8745-7AF575BFD272}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asiago.Common", "src\Asiago.Common\Asiago.Common.csproj", "{1C596BE3-9285-4394-B048-FAB6538205EA}"
@@ -20,10 +18,6 @@ Global
 		{E69B251E-4665-4BD8-8F2B-D3EF45708F32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E69B251E-4665-4BD8-8F2B-D3EF45708F32}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E69B251E-4665-4BD8-8F2B-D3EF45708F32}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EB13F25A-5BB8-405E-90CD-598FB2DDCEF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EB13F25A-5BB8-405E-90CD-598FB2DDCEF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EB13F25A-5BB8-405E-90CD-598FB2DDCEF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EB13F25A-5BB8-405E-90CD-598FB2DDCEF1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7F05AD01-0BA4-4250-8745-7AF575BFD272}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7F05AD01-0BA4-4250-8745-7AF575BFD272}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F05AD01-0BA4-4250-8745-7AF575BFD272}.Release|Any CPU.ActiveCfg = Release|Any CPU

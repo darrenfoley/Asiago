@@ -1,4 +1,4 @@
-﻿namespace IsThereAnyDeal.Models
+﻿namespace Asiago.Core.IsThereAnyDeal.Models
 {
     public class PlayerStats
     {

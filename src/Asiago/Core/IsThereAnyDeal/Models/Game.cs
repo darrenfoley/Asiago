@@ -1,7 +1,7 @@
-﻿using Asiago.Common.JsonConverters;
+﻿using Asiago.Core.JsonConverters;
 using Newtonsoft.Json;
 
-namespace IsThereAnyDeal.Models
+namespace Asiago.Core.IsThereAnyDeal.Models
 {
     /// <summary>
     /// Basic information about a game.

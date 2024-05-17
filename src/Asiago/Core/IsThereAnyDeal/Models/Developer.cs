@@ -1,6 +1,6 @@
-﻿namespace IsThereAnyDeal.Models
+﻿namespace Asiago.Core.IsThereAnyDeal.Models
 {
-    public class Shop
+    public class Developer
     {
         public required int Id { get; set; }
         public required string Name { get; set; }

@@ -1,11 +1,10 @@
 ﻿using Asiago.Core.Discord;
 using Asiago.Core.IsThereAnyDeal;
+using Asiago.Core.IsThereAnyDeal.Models;
 using Asiago.Extensions;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using IsThereAnyDeal;
-using IsThereAnyDeal.Models;
 using Microsoft.Extensions.Options;
 
 namespace Asiago.SlashCommands
