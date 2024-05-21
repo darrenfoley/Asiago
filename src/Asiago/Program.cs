@@ -44,6 +44,7 @@ builder.Services.AddOptions<IsThereAnyDealOptions>().Configure(options => option
 builder.Services.AddOptions<TwitchOptions>().Configure(options => options.WebhookSecret = twitchWebhookSecret);
 builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseNpgsql(postgresConnectionString));
+builder.Services.AddSingleton<IsThereAnyDealClient>();
 builder.Services.AddSingleton(_ => new TwitchAPI(settings: twitchApiSettings));
 builder.Services.AddSingleton(discord);
 builder.Services.AddInvocablesFromNamespace("Asiago.Invocables", typeof(Program).Assembly);
