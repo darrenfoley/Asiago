@@ -1,15 +1,21 @@
 ﻿using Asiago.Core.IsThereAnyDeal.Models;
 using Asiago.Extensions;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace Asiago.Core.IsThereAnyDeal
 {
-    public class IsThereAnyDealClient(string apiKey, HttpClient httpClient)
+    internal class IsThereAnyDealClient(
+        IOptions<IsThereAnyDealOptions> itadOptions,
+        HttpClient httpClient,
+        ILogger<IsThereAnyDealClient> logger
+        )
     {
         private static readonly Uri BaseUrl = new("https://api.isthereanydeal.com");
 
-        private readonly string _apiKey = apiKey;
+        private readonly IsThereAnyDealOptions _itadOptions = itadOptions.Value;
         private readonly HttpClient _httpClient = httpClient;
+        private readonly ILogger<IsThereAnyDealClient> _logger = logger;
 
         /// <summary>
         /// Looks up a game by its title.
@@ -18,7 +24,7 @@ namespace Asiago.Core.IsThereAnyDeal
         {
             Dictionary<string, string> queryParameters = new()
             {
-                { "key", _apiKey },
+                { "key", _itadOptions.ApiKey },
                 { "title", title }
             };
 
@@ -39,7 +45,7 @@ namespace Asiago.Core.IsThereAnyDeal
         {
             Dictionary<string, string> queryParameters = new()
             {
-                { "key", _apiKey },
+                { "key", _itadOptions.ApiKey },
                 { "country", countryCode }
             };
 
@@ -54,7 +60,7 @@ namespace Asiago.Core.IsThereAnyDeal
         {
             Dictionary<string, string> queryParameters = new()
             {
-                { "key", _apiKey },
+                { "key", _itadOptions.ApiKey },
                 { "id", id.ToString() }
             };
 
@@ -68,7 +74,7 @@ namespace Asiago.Core.IsThereAnyDeal
         {
             Dictionary<string, string> queryParameters = new()
             {
-                { "key", _apiKey },
+                { "key", _itadOptions.ApiKey },
                 { "title", title },
                 { "limit", limit.ToString() }
             };
@@ -97,15 +103,30 @@ namespace Asiago.Core.IsThereAnyDeal
                 Query = queryParameters.ToQueryString()
             }.Uri;
 
-        private static async Task<T?> ParseResponse<T>(HttpResponseMessage response) where T : class
+        private async Task<T?> ParseResponse<T>(HttpResponseMessage response) where T : class
         {
-            if (!response.IsSuccessStatusCode)
+            T? ret = null;
+
+            if (response.IsSuccessStatusCode)
             {
-                return null;
+                var content = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    ret = JsonConvert.DeserializeObject<T>(content);
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogError(
+                        ex,
+                        "Failed to deserialize response for request [{method} {path}]. Response content: [{content}]",
+                        response.RequestMessage?.Method,
+                        response.RequestMessage?.RequestUri?.AbsolutePath,
+                        content
+                        );
+                }
             }
 
-            var content = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<T>(content);
+            return ret;
         }
     }
 }

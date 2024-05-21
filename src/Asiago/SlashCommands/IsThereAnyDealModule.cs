@@ -5,20 +5,12 @@ using Asiago.Extensions;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using Microsoft.Extensions.Options;
 
 namespace Asiago.SlashCommands
 {
-    internal class IsThereAnyDealModule : ApplicationCommandModule
+    internal class IsThereAnyDealModule(IsThereAnyDealClient itadClient) : ApplicationCommandModule
     {
-        private readonly IsThereAnyDealOptions _itadOptions;
-        private readonly HttpClient _httpClient;
-
-        public IsThereAnyDealModule(IOptions<IsThereAnyDealOptions> itadOptions, HttpClient httpClient)
-        {
-            _itadOptions = itadOptions.Value;
-            _httpClient = httpClient;
-        }
+        private readonly IsThereAnyDealClient _itadClient = itadClient;
 
         [SlashCommand("gamedeals", "Get game deals")]
         public async Task GameDeals(
@@ -29,16 +21,15 @@ namespace Asiago.SlashCommands
         {
             await ctx.DeferAsync();
 
-            IsThereAnyDealClient itadClient = new(_itadOptions.ApiKey, _httpClient);
-            Game? game = await itadClient.LookupGameAsync(title);
+            Game? game = await _itadClient.LookupGameAsync(title);
             if (game is null)
             {
                 await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder { Content = $"Unable to find game [{title}]" });
                 return;
             }
 
-            Task<GameInfo?> gameInfoTask = itadClient.GetGameInfoAsync(game.Id);
-            Task<PriceOverview?> priceOverviewTask = itadClient.GetGamePriceOverviewAsync(game.Id, country.ToString());
+            Task<GameInfo?> gameInfoTask = _itadClient.GetGameInfoAsync(game.Id);
+            Task<PriceOverview?> priceOverviewTask = _itadClient.GetGamePriceOverviewAsync(game.Id, country.ToString());
 
             GameInfo? gameInfo = await gameInfoTask;
             PriceOverview? priceOverview = await priceOverviewTask;
@@ -127,24 +118,16 @@ namespace Asiago.SlashCommands
         US,
     }
 
-    internal class GameTitleAutocompleteProvider : IAutocompleteProvider
+    internal class GameTitleAutocompleteProvider(IsThereAnyDealClient itadClient) : IAutocompleteProvider
     {
-        private readonly IsThereAnyDealOptions _itadOptions;
-        private readonly HttpClient _httpClient;
-
-        public GameTitleAutocompleteProvider(IOptions<IsThereAnyDealOptions> itadOptions, HttpClient httpClient)
-        {
-            _itadOptions = itadOptions.Value;
-            _httpClient = httpClient;
-        }
+        private readonly IsThereAnyDealClient _itadClient = itadClient;
 
         public async Task<IEnumerable<DiscordAutoCompleteChoice>> Provider(AutocompleteContext ctx)
         {
             var value = ctx.FocusedOption.Value.ToString();
             if (!string.IsNullOrWhiteSpace(value))
             {
-                IsThereAnyDealClient itadClient = new(_itadOptions.ApiKey, _httpClient);
-                List<Game>? games = await itadClient.SearchGamesAsync(value, 25);
+                List<Game>? games = await _itadClient.SearchGamesAsync(value, 25);
                 if (games is not null)
                 {
                     return games.ConvertAll(game => new DiscordAutoCompleteChoice(game.Title, game.Title));
