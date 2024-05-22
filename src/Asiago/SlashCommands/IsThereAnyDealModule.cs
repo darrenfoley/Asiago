@@ -8,9 +8,14 @@ using DSharpPlus.SlashCommands;
 
 namespace Asiago.SlashCommands
 {
-    internal class IsThereAnyDealModule(IsThereAnyDealClient itadClient) : ApplicationCommandModule
+    internal class IsThereAnyDealModule : ApplicationCommandModule
     {
-        private readonly IsThereAnyDealClient _itadClient = itadClient;
+        private readonly IsThereAnyDealClient _itadClient;
+
+        public IsThereAnyDealModule(IsThereAnyDealClient itadClient)
+        {
+            _itadClient = itadClient;
+        }
 
         [SlashCommand("gamedeals", "Get game deals")]
         public async Task GameDeals(
@@ -118,9 +123,14 @@ namespace Asiago.SlashCommands
         US,
     }
 
-    internal class GameTitleAutocompleteProvider(IsThereAnyDealClient itadClient) : IAutocompleteProvider
+    internal class GameTitleAutocompleteProvider : IAutocompleteProvider
     {
-        private readonly IsThereAnyDealClient _itadClient = itadClient;
+        private readonly IsThereAnyDealClient _itadClient;
+
+        public GameTitleAutocompleteProvider(IsThereAnyDealClient itadClient)
+        {
+            _itadClient = itadClient;
+        }
 
         public async Task<IEnumerable<DiscordAutoCompleteChoice>> Provider(AutocompleteContext ctx)
         {

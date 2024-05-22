@@ -5,17 +5,24 @@ using Newtonsoft.Json;
 
 namespace Asiago.Core.IsThereAnyDeal
 {
-    internal class IsThereAnyDealClient(
-        IOptions<IsThereAnyDealOptions> itadOptions,
-        HttpClient httpClient,
-        ILogger<IsThereAnyDealClient> logger
-        )
+    internal class IsThereAnyDealClient
     {
         private static readonly Uri BaseUrl = new("https://api.isthereanydeal.com");
 
-        private readonly IsThereAnyDealOptions _itadOptions = itadOptions.Value;
-        private readonly HttpClient _httpClient = httpClient;
-        private readonly ILogger<IsThereAnyDealClient> _logger = logger;
+        private readonly IsThereAnyDealOptions _itadOptions;
+        private readonly HttpClient _httpClient;
+        private readonly ILogger<IsThereAnyDealClient> _logger;
+
+        public IsThereAnyDealClient(
+            IOptions<IsThereAnyDealOptions> itadOptions,
+            HttpClient httpClient,
+            ILogger<IsThereAnyDealClient> logger
+        )
+        {
+            _itadOptions = itadOptions.Value;
+            _httpClient = httpClient;
+            _logger = logger;
+        }
 
         /// <summary>
         /// Looks up a game by its title.
