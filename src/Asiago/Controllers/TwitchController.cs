@@ -29,9 +29,9 @@ namespace Asiago.Controllers
         private readonly IQueue _queue;
         private readonly ICache _cache;
 
-        public TwitchController(ILoggerFactory loggerFactory, IOptions<TwitchOptions> twitchOptions, IQueue queue, ICache cache)
+        public TwitchController(ILogger<TwitchController> logger, IOptions<TwitchOptions> twitchOptions, IQueue queue, ICache cache)
         {
-            _logger = loggerFactory.CreateLogger<TwitchController>();
+            _logger = logger;
             _twitchOptions = twitchOptions.Value;
             _queue = queue;
             _cache = cache;

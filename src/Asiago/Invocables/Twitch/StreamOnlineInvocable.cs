@@ -27,13 +27,13 @@ namespace Asiago.Invocables.Twitch
         public StreamOnlineInvocable(
             TwitchAPI twitchApi,
             DiscordClient discordClient,
-            ILoggerFactory loggerFactory,
+            ILogger<StreamOnlineInvocable> logger,
             IDbContextFactory<ApplicationDbContext> dbContextFactory
             )
         {
             _twitchApi = twitchApi;
             _discordClient = discordClient;
-            _logger = loggerFactory.CreateLogger<StreamOnlineInvocable>();
+            _logger = logger;
             _dbContextFactory = dbContextFactory;
         }
 
