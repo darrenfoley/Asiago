@@ -23,14 +23,14 @@ namespace Asiago.Commands
         private readonly WebOptions _webOptions;
 
         public TwitchModule(
-            ILoggerFactory loggerFactory,
+            ILogger<TwitchModule> logger,
             IDbContextFactory<ApplicationDbContext> dbContextFactory,
             TwitchAPI twitchApi,
             IOptions<TwitchOptions> twitchOptions,
             IOptions<WebOptions> webOptions
             )
         {
-            _logger = loggerFactory.CreateLogger<TwitchModule>();
+            _logger = logger;
             _dbContextFactory = dbContextFactory;
             _twitchApi = twitchApi;
             _twitchOptions = twitchOptions.Value;

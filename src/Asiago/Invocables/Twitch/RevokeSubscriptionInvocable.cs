@@ -17,11 +17,11 @@ namespace Asiago.Invocables.Twitch
         private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
 
         public RevokeSubscriptionInvocable(
-            ILoggerFactory loggerFactory,
+            ILogger<RevokeSubscriptionInvocable> logger,
             IDbContextFactory<ApplicationDbContext> dbContextFactory
             )
         {
-            _logger = loggerFactory.CreateLogger<RevokeSubscriptionInvocable>();
+            _logger = logger;
             _dbContextFactory = dbContextFactory;
         }
 

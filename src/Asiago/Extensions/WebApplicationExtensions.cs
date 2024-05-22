@@ -13,7 +13,7 @@ namespace Asiago.Extensions
         /// </summary>
         public static WebApplication EnableQueueLogging(this WebApplication app)
         {
-            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<IQueue>();
+            var logger = app.Services.GetRequiredService<ILogger<IQueue>>();
             app.Services.ConfigureQueue()
                 .OnError(ex => logger.LogError(ex, "An unhandled exception occured while processing a background task."))
                 .LogQueuedTaskProgress(logger);
