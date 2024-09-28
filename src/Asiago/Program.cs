@@ -24,6 +24,7 @@ Uri baseUrl = builder.Configuration.GetRequiredValue<Uri>("BASEURL");
 string isThereAnyDealApiKey = builder.Configuration.GetRequiredValue<string>("ISTHEREANYDEAL_APIKEY");
 string postgresConnectionString = builder.Configuration.GetRequiredPostgresConnectionString();
 string twitchWebhookSecret = builder.Configuration.GetRequiredValue<string>("TWITCH_WEBHOOKSECRET");
+int? twitchStreamOnlineCooldownMinutes = builder.Configuration.GetValue<int?>("TWITCH_STREAMONLINECOOLDOWNMINUTES");
 ApiSettings twitchApiSettings = new()
 {
     ClientId = builder.Configuration.GetRequiredValue<string>("TWITCH_CLIENTID"),
@@ -41,7 +42,14 @@ DiscordClient discord = new(discordConfig);
 
 builder.Services.AddOptions<WebOptions>().Configure(options => options.BaseUrl = baseUrl);
 builder.Services.AddOptions<IsThereAnyDealOptions>().Configure(options => options.ApiKey = isThereAnyDealApiKey);
-builder.Services.AddOptions<TwitchOptions>().Configure(options => options.WebhookSecret = twitchWebhookSecret);
+builder.Services.AddOptions<TwitchOptions>().Configure(options =>
+{
+    options.WebhookSecret = twitchWebhookSecret;
+    if (twitchStreamOnlineCooldownMinutes != null)
+    {
+        options.StreamOnlineCooldown = TimeSpan.FromMinutes(twitchStreamOnlineCooldownMinutes.Value);
+    }
+});
 builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseNpgsql(postgresConnectionString));
 builder.Services.AddSingleton<IsThereAnyDealClient>();
