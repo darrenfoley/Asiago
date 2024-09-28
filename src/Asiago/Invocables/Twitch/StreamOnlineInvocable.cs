@@ -1,13 +1,16 @@
 ﻿using Asiago.Core.Discord;
+using Asiago.Core.Twitch;
 using Asiago.Core.Twitch.EventSub;
 using Asiago.Core.Twitch.EventSub.Models;
 using Asiago.Data;
 using Asiago.Data.Models;
 using Asiago.Extensions;
+using Coravel.Cache.Interfaces;
 using Coravel.Invocable;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using TwitchLib.Api;
 
 namespace Asiago.Invocables.Twitch
@@ -19,28 +22,36 @@ namespace Asiago.Invocables.Twitch
     {
         public required EventNotificationPayload<StreamOnlineEvent> Payload { get; set; }
 
+        private const string _streamOnlineCacheKeyPrefix = "twitchStreamOnline-";
+
         private readonly TwitchAPI _twitchApi;
         private readonly DiscordClient _discordClient;
         private readonly ILogger<StreamOnlineInvocable> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
+        private readonly ICache _cache;
+        private readonly TwitchOptions _twitchOptions;
 
         public StreamOnlineInvocable(
             TwitchAPI twitchApi,
             DiscordClient discordClient,
             ILogger<StreamOnlineInvocable> logger,
-            IDbContextFactory<ApplicationDbContext> dbContextFactory
+            IDbContextFactory<ApplicationDbContext> dbContextFactory,
+            ICache cache,
+            IOptions<TwitchOptions> twitchOptions
             )
         {
             _twitchApi = twitchApi;
             _discordClient = discordClient;
             _logger = logger;
             _dbContextFactory = dbContextFactory;
+            _cache = cache;
+            _twitchOptions = twitchOptions.Value;
         }
 
         public async Task Invoke()
         {
             _logger.LogInformation(
-                "Processing {notificationType} notification for Twitch channel [{userId}][{userDisplayName}]",
+                "Processing [{notificationType}] notification for Twitch channel [{userId}][{userDisplayName}]",
                 EventSubTypes.StreamOnline,
                 Payload.Event.BroadcasterUserId,
                 Payload.Event.BroadcasterUserName
@@ -61,7 +72,7 @@ namespace Asiago.Invocables.Twitch
                     "Twitch channel [{userId}][{userDisplayName}] not found in database",
                     Payload.Event.BroadcasterUserId,
                     Payload.Event.BroadcasterUserName
-                );
+                    );
                 return;
             }
             if (twitchChannel.SubscribedGuilds.Count == 0)
@@ -70,9 +81,22 @@ namespace Asiago.Invocables.Twitch
                     "No guilds subscribed to Twitch channel [{userId}][{userDisplayName}] found in database",
                     Payload.Event.BroadcasterUserId,
                     Payload.Event.BroadcasterUserName
-                );
+                    );
                 return;
             }
+
+            var cacheKey = _streamOnlineCacheKeyPrefix + Payload.Event.BroadcasterUserId;
+            if (await _cache.HasAsync(cacheKey))
+            {
+                _logger.LogInformation(
+                    "Ignoring [{notificationType}] notifications for Twitch channel [{userId}][{userDisplayName}]. Cooldown is active",
+                    EventSubTypes.StreamOnline,
+                    Payload.Event.BroadcasterUserId,
+                    Payload.Event.BroadcasterUserName
+                    );
+                return;
+            }
+            _cache.Remember(cacheKey, () => true, _twitchOptions.StreamOnlineCooldown);
 
             var getStreamsResponse = await _twitchApi.Helix.Streams.GetStreamsAsync(userIds: [Payload.Event.BroadcasterUserId]);
             var stream = getStreamsResponse.Streams.SingleOrDefault();
@@ -82,7 +106,7 @@ namespace Asiago.Invocables.Twitch
                     "Unable to find stream info for Twitch channel [{userId}][{userDisplayName}]",
                     Payload.Event.BroadcasterUserId,
                     Payload.Event.BroadcasterUserName
-                );
+                    );
                 return;
             }
 
