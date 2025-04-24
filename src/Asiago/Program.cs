@@ -5,6 +5,7 @@ using Asiago.Core.Web;
 using Asiago.Data;
 using Asiago.Data.Extensions;
 using Asiago.Extensions;
+using Asiago.Services;
 using Asiago.SlashCommands;
 using Coravel;
 using DSharpPlus;
@@ -58,6 +59,7 @@ builder.Services.AddSingleton(discord);
 builder.Services.AddInvocablesFromNamespace("Asiago.Invocables", typeof(Program).Assembly);
 builder.Services.AddQueue();
 builder.Services.AddCache();
+builder.Services.AddSingleton<DiscordEventHandlerService>();
 
 builder.Services.AddControllers()
     .AddNewtonsoftJson();
@@ -85,6 +87,9 @@ var commands = discord.UseCommandsNext(new CommandsNextConfiguration
 commands.RegisterCommands<OwnerModule>();
 commands.RegisterCommands<GuildConfigurationModule>();
 commands.RegisterCommands<TwitchModule>();
+
+DiscordEventHandlerService discordEventHandlerService = app.Services.GetRequiredService<DiscordEventHandlerService>();
+discord.GuildDeleted += discordEventHandlerService.HandleGuildDeleted; // requires DiscordIntents.Guilds
 
 await discord.ConnectAsync();
 
