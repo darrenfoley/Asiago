@@ -9,6 +9,7 @@ using Coravel.Cache.Interfaces;
 using Coravel.Invocable;
 using DSharpPlus;
 using DSharpPlus.Entities;
+using DSharpPlus.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using TwitchLib.Api;
@@ -149,15 +150,30 @@ namespace Asiago.Invocables.Twitch
 
             foreach (var guildConfig in twitchChannel.SubscribedGuilds)
             {
-                var guild = await _discordClient.GetGuildAsync(guildConfig.GuildId);
-                if (guildConfig.TwitchUpdateChannelId == null)
+                try
                 {
-                    _logger.LogWarning("Guild [{guildId}][{guildName}] has Twitch subscriptions but no Twitch update channel set", guild.Id, guild.Name);
+                    var guild = await _discordClient.GetGuildAsync(guildConfig.GuildId);
+                    if (guildConfig.TwitchUpdateChannelId == null)
+                    {
+                        _logger.LogWarning("Guild [{guildId}][{guildName}] has Twitch subscriptions but no Twitch update channel set", guild.Id, guild.Name);
+                    }
+                    else
+                    {
+                        var channel = guild.GetChannel(guildConfig.TwitchUpdateChannelId.Value);
+                        await channel.SendMessageAsync(embedBuilder);
+                    }
                 }
-                else
+                catch (DiscordException ex)
                 {
-                    var channel = guild.GetChannel(guildConfig.TwitchUpdateChannelId.Value);
-                    await channel.SendMessageAsync(embedBuilder);
+                    _logger.LogWarning(
+                        ex,
+                        "Unable to post [{notificationType}] notification for Twitch channel [{userId}][{userDisplayName}] in guild [{guildId}] in channel [{channelId}].",
+                        EventSubTypes.StreamOnline,
+                        Payload.Event.BroadcasterUserId,
+                        Payload.Event.BroadcasterUserName,
+                        guildConfig.GuildId,
+                        guildConfig.TwitchUpdateChannelId
+                        );
                 }
             }
         }
