@@ -132,7 +132,7 @@ namespace Asiago.Invocables.Twitch
             if (stream.GameId != null)
             {
                 var getGamesResponse = await _twitchApi.Helix.Games.GetGamesAsync([stream.GameId]);
-                var game = getGamesResponse.Games.SingleOrDefault();
+                var game = getGamesResponse.Data.SingleOrDefault();
                 if (game == null)
                 {
                     _logger.LogWarning("Unable to find game info for game ID [{id}]", stream.GameId);
