@@ -11,10 +11,15 @@ namespace Asiago.Commands
     internal class GuildConfigurationModule : BaseCommandModule
     {
         private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
+        private readonly ILogger<GuildConfigurationModule> _logger;
 
-        public GuildConfigurationModule(IDbContextFactory<ApplicationDbContext> dbContextFactory)
+        public GuildConfigurationModule(
+            IDbContextFactory<ApplicationDbContext> dbContextFactory,
+            ILogger<GuildConfigurationModule> logger
+            )
         {
             _dbContextFactory = dbContextFactory;
+            _logger = logger;
         }
 
         [Command]
@@ -22,27 +27,27 @@ namespace Asiago.Commands
         [RequireGuild]
         public async Task SetAdminRole(CommandContext ctx, DiscordRole role)
         {
-            int rowsAffected;
+            await using var dbContext = _dbContextFactory.CreateDbContext();
 
-            await using (var dbContext = _dbContextFactory.CreateDbContext())
-            {
-                rowsAffected = await dbContext.GuildConfigurations.Upsert(new GuildConfiguration
-                {
-                    GuildId = ctx.Guild.Id,
-                    AdminRoleId = role.Id
-                }).WhenMatched(gc => new GuildConfiguration
-                {
-                    AdminRoleId = role.Id
-                }).RunAsync();
-            }
+            var guildConfiguration = await FindOrCreateGuildConfigurationAsync(dbContext, ctx.Guild.Id);
+            guildConfiguration.AdminRoleId = role.Id;
 
-            if (rowsAffected == 1)
+            try
             {
+                await dbContext.SaveChangesAsync();
                 await ctx.RespondAsync($"Admin role has been set to {role.Mention}");
             }
-            else
+            catch (DbUpdateException ex)
             {
                 await ctx.RespondAsync("Something went wrong...");
+                _logger.LogWarning(
+                    ex,
+                    "Failed to set admin role to [{roleId}][{roleName}] for guild [{guildId}][{guildName}]",
+                    role.Id,
+                    role.Name,
+                    ctx.Guild.Id,
+                    ctx.Guild.Name
+                    );
             }
         }
 
@@ -50,27 +55,27 @@ namespace Asiago.Commands
         [RequireAdmin]
         public async Task SetModRole(CommandContext ctx, DiscordRole role)
         {
-            int rowsAffected;
+            await using var dbContext = _dbContextFactory.CreateDbContext();
 
-            await using (var dbContext = _dbContextFactory.CreateDbContext())
-            {
-                rowsAffected = await dbContext.GuildConfigurations.Upsert(new GuildConfiguration
-                {
-                    GuildId = ctx.Guild.Id,
-                    ModRoleId = role.Id
-                }).WhenMatched(gc => new GuildConfiguration
-                {
-                    ModRoleId = role.Id
-                }).RunAsync();
-            }
+            var guildConfiguration = await FindOrCreateGuildConfigurationAsync(dbContext, ctx.Guild.Id);
+            guildConfiguration.ModRoleId = role.Id;
 
-            if (rowsAffected == 1)
+            try
             {
+                await dbContext.SaveChangesAsync();
                 await ctx.RespondAsync($"Mod role has been set to {role.Mention}");
             }
-            else
+            catch (DbUpdateException ex)
             {
                 await ctx.RespondAsync("Something went wrong...");
+                _logger.LogWarning(
+                    ex,
+                    "Failed to set mod role to [{roleId}][{roleName}] for guild [{guildId}][{guildName}]",
+                    role.Id,
+                    role.Name,
+                    ctx.Guild.Id,
+                    ctx.Guild.Name
+                    );
             }
         }
 
@@ -84,28 +89,43 @@ namespace Asiago.Commands
                 return;
             }
 
-            int rowsAffected;
+            await using var dbContext = _dbContextFactory.CreateDbContext();
 
-            await using (var dbContext = _dbContextFactory.CreateDbContext())
-            {
-                rowsAffected = await dbContext.GuildConfigurations.Upsert(new GuildConfiguration
-                {
-                    GuildId = ctx.Guild.Id,
-                    TwitchUpdateChannelId = channel.Id
-                }).WhenMatched(gc => new GuildConfiguration
-                {
-                    TwitchUpdateChannelId = channel.Id
-                }).RunAsync();
-            }
+            var guildConfiguration = await FindOrCreateGuildConfigurationAsync(dbContext, ctx.Guild.Id);
+            guildConfiguration.TwitchUpdateChannelId = channel.Id;
 
-            if (rowsAffected == 1)
+            try
             {
+                await dbContext.SaveChangesAsync();
                 await ctx.RespondAsync($"Twitch update channel has been set to {channel.Mention}");
             }
-            else
+            catch (DbUpdateException ex)
             {
                 await ctx.RespondAsync("Something went wrong...");
+                _logger.LogWarning(
+                    ex,
+                    "Failed to set twitch update channel to [{channelId}][{channelName}] for guild [{guildId}][{guildName}]",
+                    channel.Id,
+                    channel.Name,
+                    ctx.Guild.Id,
+                    ctx.Guild.Name
+                    );
             }
+        }
+
+        private static async Task<GuildConfiguration> FindOrCreateGuildConfigurationAsync(ApplicationDbContext dbContext, ulong guildId)
+        {
+            var guildConfiguration = await dbContext.GuildConfigurations.FindAsync(guildId);
+            if (guildConfiguration == null)
+            {
+                guildConfiguration = new GuildConfiguration
+                {
+                    GuildId = guildId
+                };
+                dbContext.GuildConfigurations.Add(guildConfiguration);
+            }
+
+            return guildConfiguration;
         }
     }
 }
