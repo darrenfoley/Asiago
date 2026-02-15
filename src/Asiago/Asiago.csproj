@@ -6,17 +6,16 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Coravel" Version="5.0.3" />
+    <PackageReference Include="Coravel" Version="6.0.2" />
     <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-02207" />
     <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-02207" />
     <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-02207" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.4" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.4">
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-    <PackageReference Include="TwitchLib.Api" Version="3.9.0" />
+    <PackageReference Include="TwitchLib.Api" Version="3.10.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Asiago.Common\Asiago.Common.csproj" />
